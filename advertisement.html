@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advertisement Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background-color: #f7f9fc;
+            --container-bg: #ffffff;
+            --text-color: #334155;
+            --progress-bar-bg: #dbeafe;
+            --progress-color: #3b82f6;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+            --border-color: #e2e8f0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            padding: 2.5rem;
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--container-bg);
+            padding: 2rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px var(--shadow-color);
+            border: 1px solid var(--border-color);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2.5rem;
+        }
+
+        h1 {
+            text-align: center;
+            color: #1a202c;
+            font-weight: 700;
+            font-size: 2.25rem;
+        }
+        
+        #backButton {
+            padding: 0.5rem 1rem;
+            background-color: #e2e8f0;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        #backButton:hover {
+            background-color: #cbd5e1;
+        }
+
+        .brand-item {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1.5rem;
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            background-color: #f8fafc;
+            border: 1px solid var(--border-color);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .brand-item:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .brand-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.75rem;
+        }
+
+        .brand-name {
+            font-weight: 600;
+            font-size: 1.25rem;
+            color: #1e293b;
+        }
+
+        .brand-hours {
+            font-size: 0.95rem;
+            color: #64748b;
+            font-weight: 500;
+        }
+
+        .progress-container {
+            width: 100%;
+            background-color: var(--progress-bar-bg);
+            border-radius: 9999px;
+            overflow: hidden;
+            height: 1.5rem;
+            position: relative;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background-color: var(--progress-color);
+            transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding-right: 0.75rem;
+        }
+
+        .progress-text {
+            color: var(--container-bg);
+            font-weight: 600;
+            font-size: 0.875rem;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <button id="backButton">← Back to Dashboard</button>
+            <h1>Advertisement Management</h1>
+            <span></span>
+        </div>
+
+        <div id="progress-list">
+        </div>
+
+    </div>
+
+    <script>
+        const BRANDING_TYPES = ["KMRL Standard", "Jio", "HDFC Bank", "Maruti Suzuki", "Dabur", "Samsung", "Myntra", "Amazon"];
+
+        const brands = BRANDING_TYPES.map(name => {
+            const total = Math.floor(Math.random() * 500) + 100;
+            const completed = Math.floor(Math.random() * total);
+            return { name, completed, total };
+        });
+
+        const progressList = document.getElementById('progress-list');
+
+        function renderProgressBars() {
+            progressList.innerHTML = '';
+
+            brands.forEach(brand => {
+                const percentage = (brand.completed / brand.total) * 100;
+                
+                const brandItem = document.createElement('div');
+                brandItem.className = 'brand-item';
+
+                brandItem.innerHTML = `
+                    <div class="brand-info">
+                        <span class="brand-name">${brand.name}</span>
+                        <span class="brand-hours">${brand.completed} / ${brand.total} hours</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${percentage.toFixed(0)}%;">
+                            <span class="progress-text">${percentage.toFixed(0)}%</span>
+                        </div>
+                    </div>
+                `;
+
+                progressList.appendChild(brandItem);
+            });
+        }
+        
+        renderProgressBars();
+
+        document.getElementById('backButton').addEventListener('click', () => {
+            window.location.href = 'index.html';
+        });
+
+    </script>
+
+</body>
+</html>
