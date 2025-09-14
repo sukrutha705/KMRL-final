@@ -362,23 +362,25 @@ th {
                 <div class="card">
                     <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-green"></span><span id="eligibleHeader"></span></h2>
                     <div id="eligibleTrains" class="table-container">
-                        <div id="eligibleLoading" class="flex justify-center items-center h-48"><div class="spinner"></div></div>
-                        <table id="eligibleTrainsTable" class="hidden">
+                      <div id="eligibleLoading" class="flex justify-center items-center h-48"><div class="spinner"></div></div>
+                      <div class="overflow-x-auto w-full">
+                         <table id="eligibleTrainsTable" class="hidden">
                             <thead><tr id="eligibleHeadRow"></tr></thead>
                             <tbody></tbody>
-                        </table>
-                    </div>
+                         </table>
+                      </div>
                 </div>
                 <div class="card">
                     <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-red"></span><span id="ineligibleHeader"></span></h2>
-                    <div id="ineligibleTrains" class="table-container">
-                        <div id="ineligibleLoading" class="flex justify-center items-center h-48"><div class="spinner"></div></div>
+                   <div id="ineligibleTrains" class="table-container">
+                     <div id="ineligibleLoading" class="flex justify-center items-center h-48"><div class="spinner"></div></div>
+                     <div class="overflow-x-auto w-full">
                         <table id="ineligibleTrainsTable" class="hidden">
-                            <thead><tr id="ineligibleHeadRow"></tr></thead>
-                            <tbody></tbody>
+                           <thead><tr id="ineligibleHeadRow"></tr></thead>
+                           <tbody></tbody>
                         </table>
-                    </div>
-                </div>
+                     </div>
+                   </div>
             </div>
         </div>
     </div>
@@ -854,3 +856,4 @@ th {
 </body>
 
 </html>
+
