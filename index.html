@@ -444,15 +444,135 @@ document.getElementById("manualSubmit").addEventListener("click", async () => {
   fetchAllTrainData();
 });
 
-/* Manual modal labels translation */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Train Dashboard</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* Custom badge styles */
+.badge { display:inline-block; padding:0.25rem 0.5rem; border-radius:0.5rem; font-weight:600; }
+.badge-green { background-color:#22c55e; color:white; }
+.jobDropdown { display:none; position:absolute; background:white; border:1px solid #ddd; box-shadow:0 2px 5px rgba(0,0,0,0.2); z-index:10; max-height:200px; overflow-y:auto; }
+.jobRow { display:flex; justify-content:space-between; padding:0.25rem 0.5rem; border-bottom:1px solid #eee; }
+</style>
+</head>
+<body class="bg-gray-100 font-sans p-4">
+
+<div class="flex justify-between items-center mb-4">
+  <h1 class="text-2xl font-bold">Train Dashboard</h1>
+  <button id="langToggle" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">EN/ML</button>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div>
+    <h2 id="eligibleHeader" class="text-xl font-semibold mb-2">Eligible Trains</h2>
+    <div id="eligibleLoading" class="text-center p-4">Loading...</div>
+    <table id="eligibleTrainsTable" class="min-w-full bg-white rounded shadow hidden">
+      <thead id="eligibleHeadRow" class="bg-gray-200"></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+  <div>
+    <h2 id="ineligibleHeader" class="text-xl font-semibold mb-2">Ineligible Trains</h2>
+    <div id="ineligibleLoading" class="text-center p-4">Loading...</div>
+    <table id="ineligibleTrainsTable" class="min-w-full bg-white rounded shadow hidden">
+      <thead id="ineligibleHeadRow" class="bg-gray-200"></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Manual Modal -->
+<div id="manualModal" class="fixed inset-0 bg-black/50 flex justify-center items-center hidden">
+  <div class="bg-white rounded-lg w-96 p-4 relative">
+    <h3 id="manualModalTitle" class="text-lg font-semibold mb-4">Manual Data Entry</h3>
+    <div class="space-y-2">
+      <label id="labelTrainId" class="block">Train ID</label>
+      <input id="manualTrainId" type="text" class="border rounded w-full p-1" />
+
+      <label id="labelJobCards" class="block">Job Cards</label>
+      <textarea id="manualJobCards" class="border rounded w-full p-1"></textarea>
+
+      <label id="labelMileage" class="block">Mileage</label>
+      <input id="manualMileage" type="number" class="border rounded w-full p-1" />
+
+      <label id="labelFitnessCert" class="block">Fitness Certificate</label>
+      <select id="manualFitnessCertificate" class="border rounded w-full p-1">
+        <option>Open</option>
+        <option>Close</option>
+      </select>
+
+      <label id="labelCleaning" class="block">Cleaning Status</label>
+      <select id="manualCleaningStatus" class="border rounded w-full p-1">
+        <option>Done</option>
+        <option>Not Done</option>
+      </select>
+    </div>
+    <div class="flex justify-end mt-4 space-x-2">
+      <button id="manualCancel" class="px-3 py-1 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
+      <button id="manualSubmit" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">Save</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+
+// --- Supabase setup ---
+const SUPABASE_URL = "https://nquzhbqkdwwxqmkdwjuz.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdXpoYnFrZHd3eHFta2R3anV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MzAxOTcsImV4cCI6MjA3MzAwNjE5N30.zCys6_cd9vvsK2Sr-xBsT_ZXYRRIm9iH1opekRvSATA";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allTrainData = [];
+let currentLang = "en";
+
+// --- Translations ---
+const translations = {
+  en: {
+    manualTitle: "Manual Data Entry",
+    labelTrainId: "Train ID", labelJobCards: "Job Cards", labelMileage: "Mileage",
+    labelFitnessCert: "Fitness Certificate", labelCleaning: "Cleaning Status",
+    optionOpen: "Open", optionClose: "Close", optionDone: "Done", optionNotDone: "Not Done",
+    eligiblePool: "Eligible Trains", ineligiblePool: "Ineligible Trains",
+    trainNo: "Train No", eligibility: "Eligibility", branding: "Branding",
+    mileage: "Mileage", jobs: "Jobs", action: "Action", reason: "Reason",
+    send: "Send", makeReady: "Make Ready",
+    missingCert: "Missing Certificate", criticalJob: "Critical Job Open",
+    tooManyJobs: "Too Many Jobs", inService: "Currently in Service",
+    confirmSend: (trainId) => `Send train ${trainId}?`, confirmMakeReady: (trainId) => `Make train ${trainId} ready?`,
+    optionCompleted: "Completed", optionPending: "Pending",
+    brands: { "KMRL Standard":"KMRL Standard","Jio":"Jio","HDFC Bank":"HDFC Bank","Dabur":"Dabur" }
+  },
+  ml: {
+    manualTitle: "മാനുവൽ ഡാറ്റാ എൻട്രി",
+    labelTrainId: "ട്രെയിൻ ഐഡി", labelJobCards: "ജോബ് കാർഡുകൾ", labelMileage: "മൈലേജ്",
+    labelFitnessCert: "ഫിറ്റ്നസ് സർട്ടിഫിക്കറ്റ്", labelCleaning: "ക്ലീനിംഗ് സ്ഥിതി",
+    optionOpen: "തുറന്നത്", optionClose: "അടഞ്ഞത്", optionDone: "ചെയ്തു", optionNotDone: "ചെയ്യാതിരിക്കുന്നു",
+    eligiblePool: "യോഗ്യമായ ട്രെയിനുകൾ", ineligiblePool: "യോഗ്യമല്ലാത്ത ട്രെയിനുകൾ",
+    trainNo: "ട്രെയിൻ നമ്പർ", eligibility: "യോഗ്യത", branding: "ബ്രാൻഡിംഗ്",
+    mileage: "മൈലേജ്", jobs: "ജോലികൾ", action: "പ്രവർത്തനം", reason: "കാരണം",
+    send: "അയയ്ക്കുക", makeReady: "സജ്ജമാക്കുക",
+    missingCert: "സർട്ടിഫിക്കറ്റ് ഇല്ല", criticalJob: "ഗുരുതര ജോബ് തുറന്നു",
+    tooManyJobs: "ചേർന്ന ജോലികൾ വളരെ കൂടുതൽ", inService: "സേവനത്തിൽ",
+    confirmSend: (trainId) => `${trainId} ട്രെയിൻ അയയ്ക്കണോ?`, confirmMakeReady: (trainId) => `${trainId} സജ്ജമാക്കണോ?`,
+    optionCompleted: "പൂർത്തിയായി", optionPending: "പെൻഡിംഗ്",
+    brands: { "KMRL Standard":"കെ.എം.ആർ.എൽ സ്റ്റാൻഡേർഡ്","Jio":"ജിയോ","HDFC Bank":"എച്ച്.ഡി.എഫ്.സി ബാങ്ക്","Dabur":"ഡാബൂർ" }
+  }
+};
+
+/* --- Manual Modal Labels --- */
 function updateManualModalLabels() {
   const t = translations[currentLang];
-  document.getElementById("manualModalTitle").textContent = t.manualTitle || "Manual Data Entry";
+  document.getElementById("manualModalTitle").textContent = t.manualTitle;
   document.getElementById("labelTrainId").textContent = t.labelTrainId;
   document.getElementById("labelJobCards").textContent = t.labelJobCards;
   document.getElementById("labelMileage").textContent = t.labelMileage;
   document.getElementById("labelFitnessCert").textContent = t.labelFitnessCert;
   document.getElementById("labelCleaning").textContent = t.labelCleaning;
+
   const fs = document.getElementById("manualFitnessCertificate");
   fs.options[0].text = t.optionOpen; fs.options[1].text = t.optionClose;
   const cs = document.getElementById("manualCleaningStatus");
@@ -461,27 +581,22 @@ function updateManualModalLabels() {
   document.getElementById("manualSubmit").textContent = t.save;
 }
 
-/* Fetching train data from Supabase */
+/* --- Fetching train data --- */
 async function fetchAllTrainData() {
   try {
     let { data, error } = await supabase.from("trains").select("*");
-    // hide loaders and show tables
     document.getElementById('eligibleLoading').classList.add('hidden');
     document.getElementById('ineligibleLoading').classList.add('hidden');
     document.getElementById('eligibleTrainsTable').classList.remove('hidden');
     document.getElementById('ineligibleTrainsTable').classList.remove('hidden');
 
-    if (error) {
-      console.error("Supabase error:", error);
-      data = getFallbackData();
-    }
+    if (error) { console.error(error); data = getFallbackData(); }
     allTrainData = (data || []).map(t => ({ ...t, jobCards: t.jobCards || [] }));
     processTrainData(allTrainData);
-  } catch (err) {
-    console.error("Fetch error:", err);
+  } catch(err) {
+    console.error(err);
     document.getElementById('eligibleLoading').classList.add('hidden');
     document.getElementById('ineligibleLoading').classList.add('hidden');
-    // fallback
     allTrainData = getFallbackData();
     processTrainData(allTrainData);
   }
@@ -489,16 +604,15 @@ async function fetchAllTrainData() {
 
 function getFallbackData() {
   return [
-    { train_id: "T112", mileage: 2233, fitnessCertificate: true, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [{ id:1, name:"Brake System Inspection", status:"Open", isCritical:false },{ id:2, name:"Door Mechanism Check", status:"Open", isCritical:false },{ id:3, name:"AC Filter Change", status:"Closed", isCritical:false }] },
+    { train_id: "T112", mileage: 2233, fitnessCertificate: true, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [{ id:1, name:"Brake System Inspection", status:"Open", isCritical:false }] },
     { train_id: "T123", mileage: 6922, fitnessCertificate: true, cleaningStatus: "Completed", branding: "Jio", jobCards: [{ id:1, name:"Pantograph Service", status:"Open", isCritical:false }] },
-    { train_id: "T124", mileage: 9021, fitnessCertificate: true, cleaningStatus: "Completed", branding: "HDFC Bank", jobCards: [{ id:1, name:"Annual Fitness Certification", status:"Open", isCritical:true },{ id:8, name:"Interior Cleaning", status:"Open", isCritical:false }] },
+    { train_id: "T124", mileage: 9021, fitnessCertificate: true, cleaningStatus: "Completed", branding: "HDFC Bank", jobCards: [{ id:1, name:"Annual Fitness Certification", status:"Open", isCritical:true }] },
     { train_id: "T101", mileage: 6488, fitnessCertificate: true, cleaningStatus: "Pending", branding: "KMRL Standard", jobCards: [{ id:1, name:"Interior Deep Cleaning", status:"Open", isCritical:false }] },
-    { train_id: "T110", mileage: 25000, fitnessCertificate: false, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [] },
-    { train_id: "T125", mileage: 12000, fitnessCertificate: true, cleaningStatus: "Completed", branding: "Dabur", jobCards: [{ id:1, name:"Wheel Profile Measurement", status:"Open", isCritical:false }] }
+    { train_id: "T110", mileage: 25000, fitnessCertificate: false, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [] }
   ];
 }
 
-/* Process & render logic */
+/* --- Process & render --- */
 function processTrainData(data) {
   const t = translations[currentLang];
   const processed = data.map(train => {
@@ -518,30 +632,13 @@ function renderTables(eligible, ineligible) {
   const t = translations[currentLang];
   const eligibleBody = document.querySelector("#eligibleTrainsTable tbody");
   const ineligibleBody = document.querySelector("#ineligibleTrainsTable tbody");
+  eligibleBody.innerHTML = ""; ineligibleBody.innerHTML = "";
 
-  // clear
-  eligibleBody.innerHTML = "";
-  ineligibleBody.innerHTML = "";
-
-  // headers
   document.getElementById("eligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.eligibility}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
   document.getElementById("ineligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.reason}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
 
-  const getTranslatedStatus = (status) => {
-    const statusMap = {
-      'Completed': t.optionCompleted || 'Completed',
-      'Pending': t.optionPending || 'Pending',
-      'Done': t.optionDone || 'Done',
-      'Not Done': t.optionNotDone || 'Not Done'
-    };
-    return statusMap[status] || status;
-  };
-
   const getTranslatedBrand = (brandName) => {
-    if (currentLang === 'ml' && translations.ml.brands && translations.ml.brands[brandName]) {
-      return translations.ml.brands[brandName];
-    }
-    return brandName || 'N/A';
+    return translations[currentLang].brands[brandName] || brandName || 'N/A';
   };
 
   eligible.forEach(train => {
@@ -549,22 +646,15 @@ function renderTables(eligible, ineligible) {
     tr.innerHTML = `
       <td class="text-center" data-label="${t.trainNo}">${train.train_id}</td>
       <td class="text-center" data-label="${t.eligibility}"><span class="badge badge-green">✅</span></td>
-      <td class="relative text-center" data-label="${t.branding}">
-        <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
-        <div class="jobDropdown">
-          <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
-        </div>
-      </td>
+      <td class="relative text-center" data-label="${t.branding}">${getTranslatedBrand(train.branding)}</td>
       <td class="text-center" data-label="${t.mileage}">${train.mileage || 0}</td>
       <td class="relative cursor-pointer text-center text-blue-600 hover:underline" data-label="${t.jobs}" onclick="toggleJobsDropdown('${train.train_id}-eligible')">
-        <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
+        ${train.jobCards.filter(j => j.status==='Open').length} / ${train.jobCards.length}
         <div id="${train.train_id}-eligible" class="jobDropdown">
-          ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
+          ${train.jobCards.filter(j=>j.status==='Open').map(j=>`<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical?'text-red-600':''}">${j.isCritical?'⚠':''}</span></div>`).join('')}
         </div>
       </td>
-      <td class="text-center" data-label="${t.action}">
-        <button data-action="send" data-train-id="${train.train_id}" class="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="sendTrain('${train.train_id}')">${t.send}</button>
-      </td>
+      <td class="text-center" data-label="${t.action}"><button class="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="sendTrain('${train.train_id}')">${t.send}</button></td>
     `;
     eligibleBody.appendChild(tr);
   });
@@ -574,62 +664,48 @@ function renderTables(eligible, ineligible) {
     tr.innerHTML = `
       <td class="text-center" data-label="${t.trainNo}">${train.train_id}</td>
       <td class="text-center" data-label="${t.reason}">${train.ineligibleReasons.join(", ")}</td>
-      <td class="relative text-center" data-label="${t.branding}">
-        <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
-        <div class="jobDropdown">
-          <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
-        </div>
-      </td>
+      <td class="text-center" data-label="${t.branding}">${getTranslatedBrand(train.branding)}</td>
       <td class="text-center" data-label="${t.mileage}">${train.mileage || 0}</td>
       <td class="relative cursor-pointer text-center text-blue-600 hover:underline" data-label="${t.jobs}" onclick="toggleJobsDropdown('${train.train_id}-ineligible')">
-        <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
+        ${train.jobCards.filter(j=>j.status==='Open').length} / ${train.jobCards.length}
         <div id="${train.train_id}-ineligible" class="jobDropdown">
-          ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
+          ${train.jobCards.filter(j=>j.status==='Open').map(j=>`<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical?'text-red-600':''}">${j.isCritical?'⚠':''}</span></div>`).join('')}
         </div>
       </td>
-      <td class="text-center" data-label="${t.action}">
-        <button data-action="makeReady" data-train-id="${train.train_id}" class="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="makeReady('${train.train_id}')">${t.makeReady}</button>
-      </td>
+      <td class="text-center" data-label="${t.action}"><button class="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="makeReady('${train.train_id}')">${t.makeReady}</button></td>
     `;
     ineligibleBody.appendChild(tr);
   });
 }
 
-// global helpers used by inline onclick
-window.toggleJobsDropdown = function(id) {
+// --- Global helpers ---
+window.toggleJobsDropdown = (id) => {
   const el = document.getElementById(id);
-  if (!el) return;
-  el.style.display = el.style.display === "block" ? "none" : "block";
+  if(el) el.style.display = el.style.display==='block'?'none':'block';
 }
 
-window.sendTrain = function(trainId) {
-  const t = translations[currentLang];
-  showConfirm(t.confirmSend(trainId), () => {
-    supabase.from("trains").update({ inService: true }).eq("train_id", trainId)
-      .then(() => fetchAllTrainData())
-      .catch(error => console.error(error));
-  });
+window.sendTrain = (trainId) => {
+  if(confirm(translations[currentLang].confirmSend(trainId))) {
+    supabase.from("trains").update({ inService:true }).eq("train_id",trainId).then(()=>fetchAllTrainData());
+  }
 }
 
-window.makeReady = function(trainId) {
-  const t = translations[currentLang];
-  showConfirm(t.confirmMakeReady(trainId), () => {
-    supabase.from("trains").update({ inService: true }).eq("train_id", trainId)
-      .then(() => fetchAllTrainData())
-      .catch(error => console.error(error));
-  });
+window.makeReady = (trainId) => {
+  if(confirm(translations[currentLang].confirmMakeReady(trainId))) {
+    supabase.from("trains").update({ inService:true }).eq("train_id",trainId).then(()=>fetchAllTrainData());
+  }
 }
 
-/* Update dashboard text/headers (translation aware) */
-function updateDashboardText() {
-  const t = translations[currentLang];
-  document.getElementById("eligibleHeader").textContent = t.eligiblePool;
-  document.getElementById("ineligibleHeader").textContent = t.ineligiblePool;
-  document.getElementById("eligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.eligibility}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
-  document.getElementById("ineligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.reason}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
+// Language toggle
+document.getElementById("langToggle").addEventListener("click",()=>{
+  currentLang = currentLang==='en'?'ml':'en';
   updateManualModalLabels();
-  if (allTrainData && allTrainData.length) processTrainData(allTrainData);
-}
+  fetchAllTrainData();
+});
+
+// Initial setup
+updateManualModalLabels();
+fetchAllTrainData();
 </script>
 
 </body>
