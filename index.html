@@ -268,6 +268,67 @@ th {
     font-size: 0.875rem;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
+
+/* Mobile-first styling for small screens */
+@media (max-width: 768px) {
+    .container {
+        padding: 1rem;
+    }
+    .card .flex.justify-between {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .card .flex.justify-between > div {
+        margin-bottom: 1rem;
+    }
+    .card .flex.justify-between > div:last-child {
+        margin-bottom: 0;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .card .flex.justify-between > div:last-child button {
+        width: 100%;
+    }
+    .grid-cols-1.lg\:grid-cols-2 {
+        grid-template-columns: 1fr;
+    }
+    table, thead, tbody, th, td, tr {
+        display: block;
+    }
+    thead tr {
+        position: absolute;
+        top: -9999px;
+        left: -9999px;
+    }
+    tr {
+        border: 1px solid #ccc;
+        margin-bottom: 1rem;
+    }
+    td {
+        border: none;
+        border-bottom: 1px solid #e5e7eb;
+        position: relative;
+        padding-left: 50%;
+        text-align: right;
+        word-wrap: break-word;
+    }
+    td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 1rem;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        text-align: left;
+        font-weight: 600;
+        color: #4b5563;
+    }
+    .jobDropdown {
+        position: static;
+        min-width: unset;
+        width: 100%;
+    }
+}
 </style>
 </head>
 <body>
@@ -475,46 +536,22 @@ th {
         await fetchAllTrainData();
         updateDashboardText();
 
-        async function loadAdvertisementsPage() {
-            try {
-                const response = await fetch('advertisement.html');
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
-                const html = await response.text();
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = html;
-                const newAdsContent = tempDiv.querySelector('.container').innerHTML;
-                document.querySelector('#advertisementsPage .container').innerHTML = newAdsContent;
-                
-                // Re-attach event listeners after content is loaded
-                const backButtonInAdPage = document.querySelector('#advertisementsPage #backButton');
-                if (backButtonInAdPage) {
-                    backButtonInAdPage.addEventListener('click', () => {
-                        advertisementsPage.classList.add("hidden");
-                        dashboard.classList.remove("hidden");
-                        updateDashboardText();
-                    });
-                }
-                updateAdvertisementsPage();
-            } catch (error) {
-                console.error('Failed to load advertisement page:', error);
-            }
-        }
-
         adsLink.addEventListener("click", () => {
             dashboard.classList.add("hidden");
             advertisementsPage.classList.remove("hidden");
-            loadAdvertisementsPage();
+            updateAdvertisementsPage();
+        });
+
+        backButton.addEventListener('click', () => {
+            advertisementsPage.classList.add("hidden");
+            dashboard.classList.remove("hidden");
+            updateDashboardText();
         });
 
         langToggle.addEventListener("click", () => {
             currentLang = (currentLang === "en") ? "ml" : "en";
             updateDashboardText();
-            // If the ads page is currently visible, update it too
-            if (!advertisementsPage.classList.contains("hidden")) {
-                 loadAdvertisementsPage();
-            }
+            updateAdvertisementsPage();
         });
 
         document.getElementById("openManualModalBtn").addEventListener("click", () => { 
@@ -563,7 +600,7 @@ th {
             if (window.location.pathname.endsWith("advertisements.html")) {
                 dashboard.classList.add("hidden");
                 advertisementsPage.classList.remove("hidden");
-                loadAdvertisementsPage();
+                updateAdvertisementsPage();
             } else {
                 dashboard.classList.remove("hidden");
                 advertisementsPage.classList.add("hidden");
@@ -575,11 +612,8 @@ th {
 
         function updateAdvertisementsPage() {
             const t = translations[currentLang];
-            document.querySelector('#advertisementsPage h1').textContent = t.adsHeader;
-            const backButtonInAdPage = document.querySelector('#advertisementsPage #backButton');
-            if (backButtonInAdPage) {
-                backButtonInAdPage.textContent = (currentLang === "en") ? "Back to Dashboard" : "ഡാഷ്ബോർഡിലേക്ക് മടങ്ങുക";
-            }
+            document.getElementById("adsHeader").textContent = t.adsHeader;
+            document.getElementById("backButton").textContent = (currentLang === "en") ? "Back to Dashboard" : "ഡാഷ്ബോർഡിലേക്ക് മടങ്ങുക";
             renderProgressBars();
         }
 
@@ -594,28 +628,26 @@ th {
                 return { name: displayName, completed, total };
             });
 
-            const progressListInAdsPage = document.querySelector('#advertisementsPage #progress-list');
-            if (progressListInAdsPage) {
-                progressListInAdsPage.innerHTML = '';
-                brands.forEach(brand => {
-                    const percentage = (brand.completed / brand.total) * 100;
-                    const brandItem = document.createElement('div');
-                    brandItem.className = 'brand-item';
+            progressList.innerHTML = '';
 
-                    brandItem.innerHTML = `
-                        <div class="brand-info">
-                            <span class="brand-name">${brand.name}</span>
-                            <span class="brand-hours">${brand.completed} / ${brand.total} hours</span>
+            brands.forEach(brand => {
+                const percentage = (brand.completed / brand.total) * 100;
+                const brandItem = document.createElement('div');
+                brandItem.className = 'brand-item';
+
+                brandItem.innerHTML = `
+                    <div class="brand-info">
+                        <span class="brand-name">${brand.name}</span>
+                        <span class="brand-hours">${brand.completed} / ${brand.total} hours</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" style="width: ${percentage.toFixed(0)}%;">
+                            <span class="progress-text">${percentage.toFixed(0)}%</span>
                         </div>
-                        <div class="progress-container">
-                            <div class="progress-bar" style="width: ${percentage.toFixed(0)}%;">
-                                <span class="progress-text">${percentage.toFixed(0)}%</span>
-                            </div>
-                        </div>
-                    `;
-                    progressListInAdsPage.appendChild(brandItem);
-                });
-            }
+                    </div>
+                `;
+                progressList.appendChild(brandItem);
+            });
         }
 
         const confirmModal = document.getElementById("confirmModal");
@@ -802,8 +834,7 @@ th {
         window.makeReady = function(trainId) {
             const t = translations[currentLang];
             showConfirm(t.confirmMakeReady(trainId), () => {
-                // Corrected: Setting `inService` to false to move it out of service.
-                supabase.from("trains").update({ inService: false }).eq("train_id", trainId)
+                supabase.from("trains").update({ inService: true }).eq("train_id", trainId)
                     .then(() => fetchAllTrainData())
                     .catch(error => console.error(error));
             });
