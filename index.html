@@ -345,19 +345,20 @@ th {
 
 <div id="dashboard">
     <div class="container mx-auto">
-        <div class="grid grid-cols-1 gap-8">
-            <div class="card">
-                <h1 class="text-3xl font-bold text-center">AI-Driven Train Induction Planning</h1>
-                <p class="text-center text-gray-500 mt-2">Decision-Support Platform for KMRL</p>
-                <div class="flex justify-between items-center mt-4 gap-2">
-                    <div class="text-sm text-gray-400 break-all"> User Status: <span id="userStatusDisplay" class="font-mono text-xs">Connected</span> </div>
-                    <div class="flex gap-2">
-                        <button id="langToggle" class="px-3 py-1 text-sm bg-gray-200 rounded-lg hover:bg-gray-300">മലയാളം / English</button>
-                        <button id="openManualModalBtn" class="px-3 py-1 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">Manual Data Entry</button>
-                        <button id="adsLink" class="px-3 py-1 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center">Advertisement Management</button>
-                    </div>
-                </div>
-            </div>
+       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-green"></span><span id="eligibleHeader"></span></h2>
+        <div id="eligibleTrains" class="table-container">
+            ... (the rest of the code for the first table) ...
+        </div>
+    </div>
+    <div class="card">
+        <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-red"></span><span id="ineligibleHeader"></span></h2>
+        <div id="ineligibleTrains" class="table-container">
+            ... (the rest of the code for the second table) ...
+        </div>
+    </div>
+</div>
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
                 <div class="card">
                     <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-green"></span><span id="eligibleHeader"></span></h2>
@@ -859,5 +860,6 @@ th {
 </body>
 
 </html>
+
 
 
