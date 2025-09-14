@@ -758,76 +758,79 @@ th {
         }
 
         function renderTables(eligible, ineligible) {
-            const t = translations[currentLang];
-            const eligibleBody = document.querySelector("#eligibleTrainsTable tbody");
-            const ineligibleBody = document.querySelector("#ineligibleTrainsTable tbody");
-            eligibleBody.innerHTML = ""; ineligibleBody.innerHTML = "";
+    const t = translations[currentLang];
+    const eligibleBody = document.querySelector("#eligibleTrainsTable tbody");
+    const ineligibleBody = document.querySelector("#ineligibleTrainsTable tbody");
+    eligibleBody.innerHTML = ""; ineligibleBody.innerHTML = "";
+    document.getElementById("eligibleHeader").textContent = t.eligiblePool;
+    document.getElementById("ineligibleHeader").textContent = t.ineligiblePool;
+    document.getElementById("eligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.eligibility}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
+    document.getElementById("ineligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.reason}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
+    const getTranslatedStatus = (status) => {
+        const statusMap = {
+            'Completed': t.optionCompleted || 'Completed',
+            'Pending': t.optionPending || 'Pending',
+            'Done': t.optionDone || 'Done',
+            'Not Done': t.optionNotDone || 'Not Done'
+        };
+        return statusMap[status] || status;
+    };
 
-            const getTranslatedStatus = (status) => {
-                const statusMap = {
-                    'Completed': t.optionCompleted || 'Completed',
-                    'Pending': t.optionPending || 'Pending',
-                    'Done': t.optionDone || 'Done',
-                    'Not Done': t.optionNotDone || 'Not Done'
-                };
-                return statusMap[status] || status;
-            };
-
-            const getTranslatedBrand = (brandName) => {
-                if (currentLang === 'ml' && translations.ml.brands[brandName]) {
-                    return translations.ml.brands[brandName];
-                }
-                return brandName || 'N/A';
-            };
-
-            eligible.forEach(train => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${train.train_id}</td>
-                    <td><span class="badge badge-green">✅</span></td>
-                    <td class="relative">
-                        <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
-                        <div class="jobDropdown">
-                            <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
-                        </div>
-                    </td>
-                    <td>${train.mileage || 0}</td>
-                    <td class="relative cursor-pointer text-blue-600 hover:underline" onclick="toggleJobsDropdown('${train.train_id}-eligible')">
-                        <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
-                        <div id="${train.train_id}-eligible" class="jobDropdown">
-                            ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
-                        </div>
-                    </td>
-                    <td>
-                        <button class="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" data-train-id="${train.train_id}" data-action="send">${t.send}</button>
-                    </td>`;
-                eligibleBody.appendChild(tr);
-            });
-
-            ineligible.forEach(train => {
-                const tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${train.train_id}</td>
-                    <td>${train.ineligibleReasons.join(", ")}</td>
-                    <td class="relative">
-                        <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
-                        <div class="jobDropdown">
-                            <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
-                        </div>
-                    </td>
-                    <td>${train.mileage || 0}</td>
-                    <td class="relative cursor-pointer text-blue-600 hover:underline" onclick="toggleJobsDropdown('${train.train_id}-ineligible')">
-                        <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
-                        <div id="${train.train_id}-ineligible" class="jobDropdown">
-                            ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
-                        </div>
-                    </td>
-                    <td>
-                        <button class="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" data-train-id="${train.train_id}" data-action="makeReady">${t.makeReady}</button>
-                    </td>`;
-                ineligibleBody.appendChild(tr);
-            });
+    const getTranslatedBrand = (brandName) => {
+        if (currentLang === 'ml' && translations.ml.brands[brandName]) {
+            return translations.ml.brands[brandName];
         }
+        return brandName || 'N/A';
+    };
+
+    eligible.forEach(train => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="text-center">${train.train_id}</td>
+            <td class="text-center"><span class="badge badge-green">✅</span></td>
+            <td class="relative text-center">
+                <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
+                <div class="jobDropdown">
+                    <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
+                </div>
+            </td>
+            <td class="text-center">${train.mileage || 0}</td>
+            <td class="relative cursor-pointer text-center text-blue-600 hover:underline" onclick="toggleJobsDropdown('${train.train_id}-eligible')">
+                <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
+                <div id="${train.train_id}-eligible" class="jobDropdown">
+                    ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
+                </div>
+            </td>
+            <td class="text-center">
+                <button class="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="sendTrain('${train.train_id}')">${t.send}</button>
+            </td>`;
+        eligibleBody.appendChild(tr);
+    });
+
+    ineligible.forEach(train => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td class="text-center">${train.train_id}</td>
+            <td class="text-center">${train.ineligibleReasons.join(", ")}</td>
+            <td class="relative text-center">
+                <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
+                <div class="jobDropdown">
+                    <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
+                </div>
+            </td>
+            <td class="text-center">${train.mileage || 0}</td>
+            <td class="relative cursor-pointer text-center text-blue-600 hover:underline" onclick="toggleJobsDropdown('${train.train_id}-ineligible')">
+                <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
+                <div id="${train.train_id}-ineligible" class="jobDropdown">
+                    ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
+                </div>
+            </td>
+            <td class="text-center">
+                <button class="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="makeReady('${train.train_id}')">${t.makeReady}</button>
+            </td>`;
+        ineligibleBody.appendChild(tr);
+    });
+}
 
         window.toggleJobsDropdown = function(id) {
             const el = document.getElementById(id);
@@ -856,4 +859,5 @@ th {
 </body>
 
 </html>
+
 
