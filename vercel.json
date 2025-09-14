@@ -1,8 +1,10 @@
 {
-  "rewrites": [
+  "routes": [
     {
-      "source": "/",
-      "destination": "/login.html"
+      "src": "/",
+      "status": 302,
+      "headers": { "Location": "/login.html" }
     }
   ]
 }
+
