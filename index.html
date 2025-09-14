@@ -4,862 +4,633 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI-Driven Train Induction Planning</title>
+
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
+
+<!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Manifest -->
 <link rel="manifest" href="/manifest.json">
-    /*changes*/
+
+<!-- App icons -->
+<link rel="icon" href="/icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="/icons/icon-192.png">
+
+<meta name="theme-color" content="#4f46e5">
+
+<!-- Service Worker Registration -->
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/service-worker.js')
+        .then(reg => console.log('Service Worker registered:', reg.scope))
         .catch(error => console.log('SW registration failed:', error));
     });
   }
-</script>/*changes*/
+</script>
+
 <style>
 /* General Styles */
-body {
-    font-family: 'Inter', sans-serif;
-    background-color: #f3f4f6;
-    color: #1f2937;
+:root { --shadow: 0 4px 6px rgba(0,0,0,0.08); }
+body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; color: #1f2937; }
+.container { max-width: 1200px; padding: 2rem; margin: 0 auto; }
+.card { background-color: #ffffff; border-radius: 0.75rem; box-shadow: var(--shadow); padding: 1.5rem; }
+h1,h2 { font-weight: 700; color: #111827; }
+.table-container { overflow-x:auto; margin-top:1rem; }
+table { width:100%; border-collapse: collapse; font-size:0.9rem; }
+th,td { padding:0.75rem 1rem; text-align:left; border-bottom:1px solid #e5e7eb; }
+th { background:#f9fafb; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; }
+.badge { display:inline-flex; align-items:center; padding:0.25rem 0.75rem; border-radius:9999px; font-weight:500; font-size:0.75rem; }
+.badge-green { background:#d1fae5; color:#065f46; }
+.badge-red { background:#fee2e2; color:#991b1b; }
+.light { width:1rem; height:1rem; border-radius:50%; margin-right:0.5rem; display:inline-block; }
+.light-green { background:#10b981; } .light-red { background:#ef4444; }
+
+.spinner { border:4px solid rgba(0,0,0,0.08); width:36px; height:36px; border-radius:50%; border-left-color:#4f46e5; animation:spin 1s linear infinite; }
+@keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index:50; }
+.modal-content { background:white; padding:2rem; border-radius:0.75rem; max-width:500px; width:100%; text-align:center; }
+
+.jobDropdown { display:none; font-size:0.875rem; background:#f9fafb; padding:0.75rem 1rem; border-radius:0.5rem; margin-top:0.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.08); position:absolute; min-width:220px; z-index:10; border:1px solid #e5e7eb; }
+.jobRow { display:flex; justify-content:space-between; align-items:flex-start; padding:0.35rem 0; border-bottom:1px solid #ebf2f5; word-break:break-word; }
+.jobRow:last-child { border-bottom:none; }
+.cursor-pointer{ cursor:pointer; } .text-blue-600{ color:#2563eb; } .text-red-600{ color:#dc2626; font-weight:700; }
+
+.relative:hover .jobDropdown { display:block; }
+
+/* Ads page styles */
+:root{
+  --background-color-ads:#f7f9fc; --container-bg-ads:#ffffff; --text-color-ads:#334155; --progress-bar-bg-ads:#dbeafe; --progress-color-ads:#3b82f6; --shadow-color-ads:rgba(0,0,0,0.08); --border-color-ads:#e2e8f0;
 }
+#advertisementsPage { background-color:var(--background-color-ads); padding:2.5rem; color:var(--text-color-ads); min-height:60vh; }
+.brand-item { display:flex; flex-direction:column; margin-bottom:1.25rem; padding:1rem; border-radius:0.75rem; background:#f8fafc; border:1px solid var(--border-color-ads); transition:transform 0.18s ease, box-shadow 0.18s ease; }
+.brand-item:hover{ transform:translateY(-4px); box-shadow:0 8px 15px rgba(0,0,0,0.1); }
+.brand-info { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.5rem; }
+.brand-name{ font-weight:600; font-size:1.05rem; color:#1e293b; }
+.brand-hours{ font-size:0.9rem; color:#64748b; font-weight:500; }
+.progress-container{ width:100%; background:var(--progress-bar-bg-ads); border-radius:9999px; overflow:hidden; height:1.4rem; position:relative; }
+.progress-bar{ height:100%; background:var(--progress-color-ads); display:flex; align-items:center; justify-content:flex-end; padding-right:0.6rem; }
 
-.container {
-    max-width: 100%;
-    padding: 2rem;
-}
-
-.card {
-    background-color: #ffffff;
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    padding: 1.5rem;
-}
-
-h1, h2 {
-    font-weight: 700;
-    color: #111827;
-}
-
-.table-container {
-    overflow-x: auto;
-    margin-top: 1rem;
-}
-
-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 0.875rem;
-}
-
-th, td {
-    padding: 0.75rem 1rem;
-    text-align: left;
-    border-bottom: 1px solid #e5e7eb;
-}
-
-th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
-
-.badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    font-weight: 500;
-    font-size: 0.75rem;
-}
-
-.badge-green {
-    background-color: #d1fae5;
-    color: #065f46;
-}
-
-.badge-red {
-    background-color: #fee2e2;
-    color: #991b1b;
-}
-
-.badge-yellow {
-    background-color: #fef3c7;
-    color: #78350f;
-}
-
-.light {
-    width: 1rem;
-    height: 1rem;
-    border-radius: 50%;
-    margin-right: 0.5rem;
-}
-
-.light-green { background-color: #10b981; }
-.light-red { background-color: #ef4444; }
-
-.spinner {
-    border: 4px solid rgba(0,0,0,0.1);
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border-left-color: #4f46e5;
-    animation: spin 1s ease infinite;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.5);
-    align-items: center;
-    justify-content: center;
-    z-index: 50;
-}
-
-.modal-content {
-    background: white;
-    padding: 2rem;
-    border-radius: 0.75rem;
-    max-width: 450px;
-    width: 100%;
-    text-align: center;
-}
-
-.jobDropdown {
-    display: none;
-    font-size: 0.875rem;
-    background: #f9fafb;
-    padding: 0.75rem 1rem;
-    border-radius: 0.5rem;
-    margin-top: 0.5rem;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    position: absolute;
-    min-width: 200px;
-    z-index: 10;
-    border: 1px solid #e5e7eb;
-}
-
-.jobRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    padding: 0.35rem 0;
-    border-bottom: 1px solid #ebf2f5;
-    word-break: break-word;
-}
-
-.jobRow:last-child {
-    border-bottom: none;
-}
-
-.jobRow span:first-child {
-    flex-grow: 1;
-    padding-right: 0.5rem;
-    color: #374151;
-}
-
-.jobRow span:last-child {
-    flex-shrink: 0;
-    text-align: right;
-    font-weight: 600;
-}
-
-.cursor-pointer { cursor: pointer; }
-.text-blue-600 { color: #2563eb; }
-.text-red-600 { color: #dc2626; font-weight: bold; }
-
-.relative:hover .jobDropdown { display: block; }
-
-/* Advertisement Management CSS */
-:root {
-    --background-color-ads: #f7f9fc;
-    --container-bg-ads: #ffffff;
-    --text-color-ads: #334155;
-    --progress-bar-bg-ads: #dbeafe;
-    --progress-color-ads: #3b82f6;
-    --shadow-color-ads: rgba(0, 0, 0, 0.08);
-    --border-color-ads: #e2e8f0;
-}
-
-#advertisementsPage {
-    background-color: var(--background-color-ads);
-    padding: 2.5rem;
-    color: var(--text-color-ads);
-    line-height: 1.6;
-}
-
-#advertisementsPage .container {
-    max-width: 800px;
-    margin: 0 auto;
-    background-color: var(--container-bg-ads);
-    padding: 2rem 2.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 10px 25px var(--shadow-color-ads);
-    border: 1px solid var(--border-color-ads);
-}
-
-#advertisementsPage h1 {
-    text-align: center;
-    color: #1a202c;
-    font-weight: 700;
-    font-size: 2.25rem;
-    margin-bottom: 2.5rem;
-}
-
-.brand-item {
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 1.5rem;
-    padding: 1.25rem;
-    border-radius: 0.75rem;
-    background-color: #f8fafc;
-    border: 1px solid var(--border-color-ads);
-    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-}
-
-.brand-item:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
-}
-
-.brand-info {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin-bottom: 0.75rem;
-}
-
-.brand-name {
-    font-weight: 600;
-    font-size: 1.25rem;
-    color: #1e293b;
-}
-
-.brand-hours {
-    font-size: 0.95rem;
-    color: #64748b;
-    font-weight: 500;
-}
-
-.progress-container {
-    width: 100%;
-    background-color: var(--progress-bar-bg-ads);
-    border-radius: 9999px;
-    overflow: hidden;
-    height: 1.5rem;
-    position: relative;
-}
-
-.progress-bar {
-    height: 100%;
-    background-color: var(--progress-color-ads);
-    transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding-right: 0.75rem;
-}
-
-.progress-text {
-    color: var(--container-bg-ads);
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-}
-
-/* Mobile-first styling for small screens */
-@media (max-width: 768px) {
-    .container {
-        padding: 1rem;
-    }
-    .card .flex.justify-between {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .card .flex.justify-between > div {
-        margin-bottom: 1rem;
-    }
-    .card .flex.justify-between > div:last-child {
-        margin-bottom: 0;
-        flex-direction: column;
-        gap: 0.5rem;
-    }
-    .card .flex.justify-between > div:last-child button {
-        width: 100%;
-    }
-    .grid-cols-1.lg\:grid-cols-2 {
-        grid-template-columns: 1fr;
-    }
-    table, thead, tbody, th, td, tr {
-        display: block;
-    }
-    thead tr {
-        position: absolute;
-        top: -9999px;
-        left: -9999px;
-    }
-    tr {
-        border: 1px solid #ccc;
-        margin-bottom: 1rem;
-    }
-    td {
-        border: none;
-        border-bottom: 1px solid #e5e7eb;
-        position: relative;
-        padding-left: 50%;
-        text-align: right;
-        word-wrap: break-word;
-    }
-    td:before {
-        content: attr(data-label);
-        position: absolute;
-        left: 1rem;
-        width: 45%;
-        padding-right: 10px;
-        white-space: nowrap;
-        text-align: left;
-        font-weight: 600;
-        color: #4b5563;
-    }
-    .jobDropdown {
-        position: static;
-        min-width: unset;
-        width: 100%;
-    }
+@media (max-width:768px){
+  .container{ padding:1rem; }
+  table, thead, tbody, th, td, tr { display:block; }
+  thead tr { position:absolute; top:-9999px; left:-9999px; }
+  tr { border:1px solid #ccc; margin-bottom:1rem; }
+  td { border:none; border-bottom:1px solid #e5e7eb; position:relative; padding-left:50%; text-align:right; word-wrap:break-word; }
+  td:before { content: attr(data-label); position:absolute; left:1rem; width:45%; padding-right:10px; white-space:nowrap; text-align:left; font-weight:600; color:#4b5563; }
+  .jobDropdown{ position:static; min-width:unset; width:100%; }
 }
 </style>
 </head>
 <body>
 
-<div id="dashboard">
-    <div class="container mx-auto">
-       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-    <div class="card">
-        <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-green"></span><span id="eligibleHeader"></span></h2>
-        <div id="eligibleTrains" class="table-container">
-            ... (the rest of the code for the first table) ...
-        </div>
+<!-- Top bar controls -->
+<div class="bg-white shadow-sm">
+  <div class="container flex items-center justify-between">
+    <div class="flex items-center gap-4 py-3">
+      <h1 class="text-xl font-semibold">AI-Driven Train Induction Planning</h1>
+      <button id="openManualModalBtn" class="px-3 py-1 bg-indigo-600 text-white rounded-md text-sm">Manual Entry</button>
+      <button id="adsLink" class="px-3 py-1 bg-gray-100 rounded-md text-sm">Advertisement Mgmt</button>
     </div>
-    <div class="card">
-        <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-red"></span><span id="ineligibleHeader"></span></h2>
-        <div id="ineligibleTrains" class="table-container">
-            ... (the rest of the code for the second table) ...
-        </div>
+    <div class="flex items-center gap-3">
+      <button id="langToggle" class="px-3 py-1 bg-gray-100 rounded-md text-sm">ML/EN</button>
+      <a id="installPrompt" class="px-3 py-1 bg-gray-100 rounded-md text-sm hidden">Install</a>
     </div>
-</div>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
-                <div class="card">
-                    <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-green"></span><span id="eligibleHeader"></span></h2>
-                    <div id="eligibleTrains" class="table-container">
-                      <div id="eligibleLoading" class="flex justify-center items-center h-48"><div class="spinner"></div></div>
-                      <div class="overflow-x-auto w-full">
-                         <table id="eligibleTrainsTable" class="hidden">
-                            <thead><tr id="eligibleHeadRow"></tr></thead>
-                            <tbody></tbody>
-                         </table>
-                      </div>
-                </div>
-                <div class="card">
-                    <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-red"></span><span id="ineligibleHeader"></span></h2>
-                   <div id="ineligibleTrains" class="table-container">
-                     <div id="ineligibleLoading" class="flex justify-center items-center h-48"><div class="spinner"></div></div>
-                     <div class="overflow-x-auto w-full">
-                        <table id="ineligibleTrainsTable" class="hidden">
-                           <thead><tr id="ineligibleHeadRow"></tr></thead>
-                           <tbody></tbody>
-                        </table>
-                     </div>
-                   </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="confirmModal" class="modal">
-        <div class="modal-content">
-            <p id="confirmMessage" class="mb-4 text-lg font-semibold"></p>
-            <div class="flex justify-center gap-4">
-                <button id="confirmYes" class="px-4 py-2 bg-green-500 text-white rounded-lg">Yes</button>
-                <button id="confirmNo" class="px-4 py-2 bg-gray-300 rounded-lg">No</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="manualModal" class="modal">
-        <div class="modal-content">
-            <h2 class="text-xl font-bold mb-4 text-center" id="manualModalTitle"></h2>
-            <div class="grid grid-cols-1 gap-4">
-                <div>
-                    <label for="manualTrainId" class="block text-sm font-semibold" id="labelTrainId"></label>
-                    <input type="text" id="manualTrainId" class="mt-1 block w-full rounded-md border-gray-300 p-2" placeholder="e.g., T101">
-                </div>
-                <div>
-                    <label for="manualJobCards" class="block text-sm font-semibold" id="labelJobCards"></label>
-                    <input type="number" id="manualJobCards" class="mt-1 block w-full rounded-md border-gray-300 p-2" placeholder="Number of open jobs">
-                </div>
-                <div>
-                    <label for="manualMileage" class="block text-sm font-semibold" id="labelMileage"></label>
-                    <input type="number" id="manualMileage" class="mt-1 block w-full rounded-md border-gray-300 p-2" placeholder="Enter mileage">
-                </div>
-                <div>
-                    <label for="manualFitnessCertificate" class="block text-sm font-semibold" id="labelFitnessCert"></label>
-                    <select id="manualFitnessCertificate" class="mt-1 block w-full rounded-md border-gray-300 p-2">
-                        <option value="true">True</option>
-                        <option value="false">False</option>
-                    </select>
-                </div>
-                <div>
-                    <label for="manualCleaningStatus" class="block text-sm font-semibold" id="labelCleaning"></label>
-                    <select id="manualCleaningStatus" class="mt-1 block w-full rounded-md border-gray-300 p-2">
-                        <option value="Done">Done</option>
-                        <option value="Not Done">Not Done</option>
-                    </select>
-                </div>
-            </div>
-            <div class="flex justify-end gap-4 mt-6">
-                <button id="manualCancel" class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"></button>
-                <button id="manualSubmit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"></button>
-            </div>
-        </div>
-    </div>
+  </div>
 </div>
 
+<!-- Main dashboard -->
+<div id="dashboard" class="container mt-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <!-- Eligible -->
+    <div class="card">
+      <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-green"></span><span id="eligibleHeader">Revenue Service Pool</span></h2>
+      <div id="eligibleTrains" class="table-container">
+        <div id="eligibleLoading" class="flex justify-center items-center h-48"><div class="spinner"></div></div>
+        <div class="overflow-x-auto w-full">
+          <table id="eligibleTrainsTable" class="hidden">
+            <thead><tr id="eligibleHeadRow"></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ineligible -->
+    <div class="card">
+      <h2 class="text-2xl font-bold mb-4 flex items-center"><span class="light light-red"></span><span id="ineligibleHeader">Maintenance & Standby Pool</span></h2>
+      <div id="ineligibleTrains" class="table-container">
+        <div id="ineligibleLoading" class="flex justify-center items-center h-48"><div class="spinner"></div></div>
+        <div class="overflow-x-auto w-full">
+          <table id="ineligibleTrainsTable" class="hidden">
+            <thead><tr id="ineligibleHeadRow"></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- confirm modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content">
+      <p id="confirmMessage" class="mb-4 text-lg font-semibold"></p>
+      <div class="flex justify-center gap-4">
+        <button id="confirmYes" class="px-4 py-2 bg-green-500 text-white rounded-lg">Yes</button>
+        <button id="confirmNo" class="px-4 py-2 bg-gray-300 rounded-lg">No</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- manual modal -->
+  <div id="manualModal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-xl font-bold mb-4 text-center" id="manualModalTitle">Manual Data Entry</h2>
+      <div class="grid grid-cols-1 gap-4">
+        <div>
+          <label for="manualTrainId" class="block text-sm font-semibold" id="labelTrainId">Train ID</label>
+          <input type="text" id="manualTrainId" class="mt-1 block w-full rounded-md border-gray-300 p-2" placeholder="e.g., T101">
+        </div>
+        <div>
+          <label for="manualJobCards" class="block text-sm font-semibold" id="labelJobCards">Job Cards</label>
+          <input type="number" id="manualJobCards" class="mt-1 block w-full rounded-md border-gray-300 p-2" placeholder="Number of open jobs">
+        </div>
+        <div>
+          <label for="manualMileage" class="block text-sm font-semibold" id="labelMileage">Mileage</label>
+          <input type="number" id="manualMileage" class="mt-1 block w-full rounded-md border-gray-300 p-2" placeholder="Enter mileage">
+        </div>
+        <div>
+          <label for="manualFitnessCertificate" class="block text-sm font-semibold" id="labelFitnessCert">Fitness Certificate</label>
+          <select id="manualFitnessCertificate" class="mt-1 block w-full rounded-md border-gray-300 p-2">
+            <option value="true">True</option>
+            <option value="false">False</option>
+          </select>
+        </div>
+        <div>
+          <label for="manualCleaningStatus" class="block text-sm font-semibold" id="labelCleaning">Cleaning Status</label>
+          <select id="manualCleaningStatus" class="mt-1 block w-full rounded-md border-gray-300 p-2">
+            <option value="Done">Done</option>
+            <option value="Not Done">Not Done</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-4 mt-6">
+        <button id="manualCancel" class="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400">Cancel</button>
+        <button id="manualSubmit" class="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Advertisements page -->
 <div id="advertisementsPage" class="hidden">
-    <div class="container">
-        <button id="backButton" class="px-3 py-1 text-sm bg-gray-200 rounded-lg hover:bg-gray-300">Back to Dashboard</button>
-        <h1 id="adsHeader">Advertisement Management</h1>
-        <div id="progress-list"></div>
-    </div>
+  <div class="container">
+    <button id="backButton" class="px-3 py-1 text-sm bg-gray-200 rounded-lg hover:bg-gray-300">Back to Dashboard</button>
+    <h1 id="adsHeader" class="text-2xl font-semibold mt-4 mb-4">Advertisement Management</h1>
+    <div id="progress-list"></div>
+  </div>
 </div>
 
+<!-- Scripts: dynamic logic -->
 <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
-    const SUPABASE_URL = "https://nquzhbqkdwwxqmkdwjuz.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdXpoYnFrZHd3eHFta2R3anV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MzAxOTcsImV4cCI6MjA3MzAwNjE5N30.zCys6_cd9vvsK2Sr-xBsT_ZXYRRIm9iH1opekRvSATA";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    const translations = {
-        en: {
-            eligiblePool: "Revenue Service Pool",
-            ineligiblePool: "Maintenance & Standby Pool",
-            trainNo: "Train #",
-            eligibility: "Service Eligibility",
-            branding: "Branding",
-            mileage: "Mileage",
-            jobs: "Jobs Open/Total",
-            action: "Action",
-            reason: "Reason",
-            ready: "Ready",
-            send: "Send",
-            makeReady: "Make Ready",
-            confirmSend: t => `Are you sure you want to send Train ${t} to Revenue Service?`,
-            confirmMakeReady: t => `Are you sure you want to make Train ${t} ready?`,
-            missingCert: "Missing Fitness Cert",
-            criticalJob: "Critical Job Open",
-            tooManyJobs: "Too Many Jobs",
-            inService: "In Revenue Service",
-            manualTitle: "Manual Data Entry",
-            labelTrainId: "Train ID",
-            labelJobCards: "Job Cards",
-            labelMileage: "Mileage",
-            labelFitnessCert: "Fitness Certificate",
-            labelCleaning: "Cleaning",
-            optionOpen: "True",
-            optionClose: "False",
-            optionDone: "Done",
-            optionNotDone: "Not Done",
-            optionCompleted: "Completed",
-            optionPending: "Pending",
-            cancel: "Cancel",
-            save: "Save",
-            adsHeader: "Advertisement Management",
-        },
-        ml: {
-            eligiblePool: "വരുമാന സേവന പൂൾ",
-            ineligiblePool: "പരിചരണവും സ്റ്റാൻഡ്ബൈ പൂളും",
-            trainNo: "ട്രെയിൻ #",
-            eligibility: "സേവന യോഗ്യത",
-            branding: "ബ്രാൻഡിംഗ്",
-            mileage: "മൈലേജ്",
-            jobs: "ജോബുകൾ തുറന്നത്/ആകെ",
-            action: "പ്രവർത്തി",
-            reason: "കാരണം",
-            ready: "തയ്യാർ",
-            send: "അയക്കുക",
-            makeReady: "തയ്യാറാക്കുക",
-            confirmSend: t => `ട്രെയിൻ ${t} വരുമാന സേവനത്തിലേക്ക് അയയ്ക്കാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?`,
-            confirmMakeReady: t => `ട്രെയിൻ ${t} തയ്യാറാക്കാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?`,
-            missingCert: "ഫിറ്റ‌്നസ് സർട്ടിഫിക്കറ്റ് ഇല്ല",
-            criticalJob: "ഗുരുതരമായ ജോബ് തുറന്നിരിക്കുന്നു",
-            tooManyJobs: "വളരെ അധികം ജോബുകൾ",
-            inService: "വരുമാന സേവനത്തിൽ",
-            manualTitle: "മാനുവൽ ഡാറ്റ എൻട്രി",
-            labelTrainId: "ട്രെയിൻ ID",
-            labelJobCards: "ജോബുകൾ",
-            labelMileage: "മൈലേജ്",
-            labelFitnessCert: "ഫിറ്റ്നസ് സർട്ടിഫിക്കറ്റ്",
-            labelCleaning: "ക്ലീനിംഗ്",
-            optionOpen: "ശരിയാണ്",
-            optionClose: "അല്ല",
-            optionDone: "പൂർത്തിയായി",
-            optionNotDone: "പൂർത്തിയായില്ല",
-            optionCompleted: "പൂർത്തിയായി",
-            optionPending: "തീർച്ചപ്പെടുത്തിയിട്ടില്ല",
-            cancel: "റദ്ദാക്കുക",
-            save: "സേവ്",
-            adsHeader: "പരസ്യം മാനേജ്മെൻ്റ്",
-            brands: {
-                "KMRL Standard": "കൊച്ചി മെട്രോ സ്റ്റാൻഡേർഡ്",
-                "Jio": "ജിയോ",
-                "HDFC Bank": "എച്ച്ഡിഎഫ്\u200cസി ബാങ്ക്",
-                "Maruti Suzuki": "മാരുതി സുസുക്കി",
-                "Dabur": "ഡാബർ",
-                "Samsung": "സാംസങ്",
-                "Myntra": "മിന്ത്ര",
-                "Amazon": "ആമസോൺ"
-            }
-        }
-    };
+const SUPABASE_URL = "https://nquzhbqkdwwxqmkdwjuz.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdXpoYnFrZHd3eHFta2R3anV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MzAxOTcsImV4cCI6MjA3MzAwNjE5N30.zCys6_cd9vvsK2Sr-xBsT_ZXYRRIm9iH1opekRvSATA";
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    let currentLang = "en";
-    let allTrainData = [];
+/* Translations */
+const translations = {
+  en: {
+    eligiblePool: "Revenue Service Pool",
+    ineligiblePool: "Maintenance & Standby Pool",
+    trainNo: "Train #",
+    eligibility: "Service Eligibility",
+    branding: "Branding",
+    mileage: "Mileage",
+    jobs: "Jobs Open/Total",
+    action: "Action",
+    reason: "Reason",
+    ready: "Ready",
+    send: "Send",
+    makeReady: "Make Ready",
+    confirmSend: t => `Are you sure you want to send Train ${t} to Revenue Service?`,
+    confirmMakeReady: t => `Are you sure you want to make Train ${t} ready?`,
+    missingCert: "Missing Fitness Cert",
+    criticalJob: "Critical Job Open",
+    tooManyJobs: "Too Many Jobs",
+    inService: "In Revenue Service",
+    manualTitle: "Manual Data Entry",
+    labelTrainId: "Train ID",
+    labelJobCards: "Job Cards",
+    labelMileage: "Mileage",
+    labelFitnessCert: "Fitness Certificate",
+    labelCleaning: "Cleaning",
+    optionOpen: "True",
+    optionClose: "False",
+    optionDone: "Done",
+    optionNotDone: "Not Done",
+    optionCompleted: "Completed",
+    optionPending: "Pending",
+    cancel: "Cancel",
+    save: "Save",
+    adsHeader: "Advertisement Management",
+  },
+  ml: {
+    eligiblePool: "വരുമാന സേവന പൂൾ",
+    ineligiblePool: "പരിചരണവും സ്റ്റാൻഡ്ബൈ പൂളും",
+    trainNo: "ട്രെയിൻ #",
+    eligibility: "സേവന യോഗ്യത",
+    branding: "ബ്രാൻഡിംഗ്",
+    mileage: "മൈലേജ്",
+    jobs: "ജോബുകൾ തുറന്നത്/ആകെ",
+    action: "പ്രവർത്തി",
+    reason: "കാരണം",
+    ready: "തയ്യാർ",
+    send: "അയക്കുക",
+    makeReady: "തയ്യാറാക്കുക",
+    confirmSend: t => `ട്രെയിൻ ${t} വരുമാന സേവനത്തിലേക്ക് അയയ്ക്കാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?`,
+    confirmMakeReady: t => `ട്രെയിൻ ${t} მზადാക്കാൻ നിങ്ങൾ ആഗ്രഹിക്കുന്നുണ്ടോ?`,
+    missingCert: "ഫിറ്റ്നസ് സർട്ടിഫിക്കറ്റ് ഇല്ല",
+    criticalJob: "ഗുരുതരമായ ജോബ് തുറന്നിരിക്കുന്നു",
+    tooManyJobs: "വളരെ അധികം ജോബുകൾ",
+    inService: "വരുമാന സേവനത്തിൽ",
+    manualTitle: "മാനുവൽ ഡാറ്റ എൻട്രി",
+    labelTrainId: "ട്രെയിൻ ID",
+    labelJobCards: "ജോബുകൾ",
+    labelMileage: "മൈലേജ്",
+    labelFitnessCert: "ഫിറ്റ്നസ് സർട്ടിഫിക്കറ്റ്",
+    labelCleaning: "ക്ലീനിംഗ്",
+    optionOpen: "ശരിയാണ്",
+    optionClose: "അല്ല",
+    optionDone: "പൂർത്തിയായി",
+    optionNotDone: "പൂർത്തിയായില്ല",
+    optionCompleted: "പൂർത്തിയായി",
+    optionPending: "തീർച്ചപ്പെടുത്തിയിട്ടില്ല",
+    cancel: "റദ്ദാക്കുക",
+    save: "സേവ്",
+    adsHeader: "പരസ്യം മാനേജ്മെൻ്റ്",
+    brands: {
+      "KMRL Standard": "കൊച്ചി മെട്രോ സ്റ്റാൻഡേർഡ്",
+      "Jio": "ജിയോ",
+      "HDFC Bank": "എച്ച്ഡിഎഫ്\u200cസി ബാങ്ക്",
+      "Maruti Suzuki": "മാരുതി സുസുക്കി",
+      "Dabur": "ഡാബർ",
+      "Samsung": "സാംസങ്",
+      "Myntra": "മിന്ത്ര",
+      "Amazon": "ആമസോൺ"
+    }
+  }
+};
 
-    document.addEventListener("DOMContentLoaded", async function() {
-        const dashboard = document.getElementById("dashboard");
-        const advertisementsPage = document.getElementById("advertisementsPage");
-        const adsLink = document.getElementById("adsLink");
-        const progressList = document.getElementById('progress-list');
-        const backButton = document.getElementById('backButton');
-        const langToggle = document.getElementById('langToggle');
-        const manualModal = document.getElementById("manualModal");
+let currentLang = "en";
+let allTrainData = [];
 
-        dashboard.classList.remove("hidden");
-        
-        await fetchAllTrainData();
-        updateDashboardText();
+document.addEventListener("DOMContentLoaded", async function() {
+  const dashboard = document.getElementById("dashboard");
+  const advertisementsPage = document.getElementById("advertisementsPage");
+  const adsLink = document.getElementById("adsLink");
+  const progressList = document.getElementById('progress-list');
+  const backButton = document.getElementById('backButton');
+  const langToggle = document.getElementById('langToggle');
+  const manualModal = document.getElementById("manualModal");
 
-        adsLink.addEventListener("click", () => {
-            dashboard.classList.add("hidden");
-            advertisementsPage.classList.remove("hidden");
-            updateAdvertisementsPage();
-        });
+  // Ensure dashboard visible on load
+  dashboard.classList.remove("hidden");
 
-        backButton.addEventListener('click', () => {
-            advertisementsPage.classList.add("hidden");
-            dashboard.classList.remove("hidden");
-            updateDashboardText();
-        });
+  // Hook up UI controls
+  adsLink.addEventListener("click", () => {
+    dashboard.classList.add("hidden");
+    advertisementsPage.classList.remove("hidden");
+    updateAdvertisementsPage();
+  });
 
-        langToggle.addEventListener("click", () => {
-            currentLang = (currentLang === "en") ? "ml" : "en";
-            updateDashboardText();
-            updateAdvertisementsPage();
-        });
+  backButton.addEventListener('click', () => {
+    advertisementsPage.classList.add('hidden');
+    dashboard.classList.remove('hidden');
+    updateDashboardText();
+  });
 
-        document.getElementById("openManualModalBtn").addEventListener("click", () => { 
-            manualModal.style.display = "flex"; 
-            updateManualModalLabels();
-        });
-        document.getElementById("manualCancel").addEventListener("click", () => { manualModal.style.display = "none"; });
-        window.addEventListener("click", (e) => { if (e.target === manualModal) manualModal.style.display = "none"; });
+  langToggle.addEventListener("click", () => {
+    currentLang = (currentLang === "en") ? "ml" : "en";
+    updateDashboardText();
+    updateAdvertisementsPage();
+  });
 
-        // Event delegation for the action buttons
-        document.getElementById('eligibleTrainsTable').addEventListener('click', (e) => {
-            const button = e.target.closest('button[data-action="send"]');
-            if (button) {
-                const trainId = button.dataset.trainId;
-                if (trainId) sendTrain(trainId);
-            }
-        });
+  document.getElementById("openManualModalBtn").addEventListener("click", () => {
+    manualModal.style.display = "flex";
+    updateManualModalLabels();
+  });
+  document.getElementById("manualCancel").addEventListener("click", () => { manualModal.style.display = "none"; });
+  window.addEventListener("click", (e) => { if (e.target === manualModal) manualModal.style.display = "none"; });
 
-        document.getElementById('ineligibleTrainsTable').addEventListener('click', (e) => {
-            const button = e.target.closest('button[data-action="makeReady"]');
-            if (button) {
-                const trainId = button.dataset.trainId;
-                if (trainId) makeReady(trainId);
-            }
-        });
+  // Delegated event listeners for tables (in case of dynamically injected buttons)
+  document.getElementById('eligibleTrainsTable').addEventListener('click', (e) => {
+    const button = e.target.closest('button[data-action="send"]');
+    if (button) {
+      const trainId = button.dataset.trainId;
+      if (trainId) sendTrain(trainId);
+    }
+  });
 
-        document.getElementById("confirmYes").addEventListener("click", () => {
-            if (typeof confirmAction === 'function') {
-                confirmAction();
-            }
-            confirmModal.style.display = "none";
-        });
-        document.getElementById("confirmNo").addEventListener("click", () => { confirmModal.style.display = "none"; });
+  document.getElementById('ineligibleTrainsTable').addEventListener('click', (e) => {
+    const button = e.target.closest('button[data-action="makeReady"]');
+    if (button) {
+      const trainId = button.dataset.trainId;
+      if (trainId) makeReady(trainId);
+    }
+  });
 
-        function updateDashboardText() {
-            const t = translations[currentLang];
-            document.getElementById("eligibleHeader").textContent = t.eligiblePool;
-            document.getElementById("ineligibleHeader").textContent = t.ineligiblePool;
-            document.getElementById("eligibleHeadRow").innerHTML = `<th>${t.trainNo}</th><th>${t.eligibility}</th><th>${t.branding}</th><th>${t.mileage}</th><th>${t.jobs}</th><th>${t.action}</th>`;
-            document.getElementById("ineligibleHeadRow").innerHTML = `<th>${t.trainNo}</th><th>${t.reason}</th><th>${t.branding}</th><th>${t.mileage}</th><th>${t.jobs}</th><th>${t.action}</th>`;
-            updateManualModalLabels();
-            processTrainData(allTrainData);
-        }
+  document.getElementById("confirmYes").addEventListener("click", () => {
+    if (typeof confirmAction === 'function') {
+      confirmAction();
+    }
+    confirmModal.style.display = "none";
+  });
+  document.getElementById("confirmNo").addEventListener("click", () => { confirmModal.style.display = "none"; });
 
-        window.addEventListener("popstate", (event) => {
-            if (window.location.pathname.endsWith("advertisements.html")) {
-                dashboard.classList.add("hidden");
-                advertisementsPage.classList.remove("hidden");
-                updateAdvertisementsPage();
-            } else {
-                dashboard.classList.remove("hidden");
-                advertisementsPage.classList.add("hidden");
-                updateDashboardText();
-            }
-        });
+  await fetchAllTrainData();
+  updateDashboardText();
+}); // end DOMContentLoaded
 
-        const BRANDING_TYPES = ["KMRL Standard", "Jio", "HDFC Bank", "Maruti Suzuki", "Dabur", "Samsung", "Myntra", "Amazon"];
+// Branding constants
+const BRANDING_TYPES = ["KMRL Standard", "Jio", "HDFC Bank", "Maruti Suzuki", "Dabur", "Samsung", "Myntra", "Amazon"];
 
-        function updateAdvertisementsPage() {
-            const t = translations[currentLang];
-            document.getElementById("adsHeader").textContent = t.adsHeader;
-            document.getElementById("backButton").textContent = (currentLang === "en") ? "Back to Dashboard" : "ഡാഷ്ബോർഡിലേക്ക് മടങ്ങുക";
-            renderProgressBars();
-        }
+/* Advertisements page helpers */
+function updateAdvertisementsPage() {
+  const t = translations[currentLang];
+  document.getElementById("adsHeader").textContent = t.adsHeader;
+  document.getElementById("backButton").textContent = (currentLang === "en") ? "Back to Dashboard" : "ഡാഷ്ബോർഡിലേക്ക് മടങ്ങുക";
+  renderProgressBars();
+}
+function renderProgressBars() {
+  const brands = BRANDING_TYPES.map(name => {
+    const total = Math.floor(Math.random() * 500) + 100;
+    const completed = Math.floor(Math.random() * total);
+    let displayName = name;
+    if (currentLang === 'ml' && translations.ml.brands[name]) displayName = translations.ml.brands[name];
+    return { name: displayName, completed, total };
+  });
 
-        function renderProgressBars() {
-            const brands = BRANDING_TYPES.map(name => {
-                const total = Math.floor(Math.random() * 500) + 100;
-                const completed = Math.floor(Math.random() * total);
-                let displayName = name;
-                if (currentLang === 'ml' && translations.ml.brands[name]) {
-                    displayName = translations.ml.brands[name];
-                }
-                return { name: displayName, completed, total };
-            });
-
-            progressList.innerHTML = '';
-
-            brands.forEach(brand => {
-                const percentage = (brand.completed / brand.total) * 100;
-                const brandItem = document.createElement('div');
-                brandItem.className = 'brand-item';
-
-                brandItem.innerHTML = `
-                    <div class="brand-info">
-                        <span class="brand-name">${brand.name}</span>
-                        <span class="brand-hours">${brand.completed} / ${brand.total} hours</span>
-                    </div>
-                    <div class="progress-container">
-                        <div class="progress-bar" style="width: ${percentage.toFixed(0)}%;">
-                            <span class="progress-text">${percentage.toFixed(0)}%</span>
-                        </div>
-                    </div>
-                `;
-                progressList.appendChild(brandItem);
-            });
-        }
-
-        const confirmModal = document.getElementById("confirmModal");
-        const confirmMessage = document.getElementById("confirmMessage");
-        let confirmAction = null;
-        function showConfirm(msg, act) { 
-            confirmMessage.textContent = msg; 
-            confirmModal.style.display = "flex"; 
-            confirmAction = act; 
-        }
-
-        document.getElementById("manualSubmit").addEventListener("click", async () => {
-            const trainId = document.getElementById("manualTrainId").value.trim().toUpperCase();
-            const jobCardsCount = parseInt(document.getElementById("manualJobCards").value) || 0;
-            const mileage = parseInt(document.getElementById("manualMileage").value) || 0;
-            const fitness = document.getElementById("manualFitnessCertificate").value === "true";
-            const cleaning = document.getElementById("manualCleaningStatus").value;
-            if (!trainId) return alert("Enter Train ID");
-
-            const defaultJobNames = [
-                "Brake System Inspection", "Door Mechanism Check", "Air Conditioning Test",
-                "Pantograph Inspection", "Wheel Profile Measurement", "Traction System Health Check",
-                "Suspension Inspection", "Interior Deep Cleaning", "Exterior Wash",
-                "Seat & Upholstery Sanitization", "Driver Cabin Sanitization", "Traction Motor Replacement",
-                "Battery Pack Change", "HVAC Filter Replacement", "Coupler Repair",
-                "Brake Pad Replacement", "Lighting System Repair", "Fire Extinguisher Check",
-                "Emergency Lighting Test", "Annual Fitness Certification", "First Aid Kit Replenishment",
-                "Onboard CCTV Firmware Update", "Passenger Information System Reset", "Driver Console Calibration",
-                "Speed Sensor Recalibration"
-            ];
-
-            const jobCards = Array.from({ length: jobCardsCount }, (_, i) => ({
-                id: i + 1,
-                name: defaultJobNames[i % defaultJobNames.length],
-                status: "Open",
-                isCritical: i === 0
-            }));
-
-            await supabase.from("trains").upsert({ train_id: trainId, jobCards, mileage, fitnessCertificate: fitness, cleaningStatus: cleaning }, { onConflict: "train_id" });
-            manualModal.style.display = "none"; 
-            fetchAllTrainData();
-        });
-
-        function updateManualModalLabels() {
-            const t = translations[currentLang];
-            document.getElementById("manualModalTitle").textContent = t.manualTitle;
-            document.getElementById("labelTrainId").textContent = t.labelTrainId;
-            document.getElementById("labelJobCards").textContent = t.labelJobCards;
-            document.getElementById("labelMileage").textContent = t.labelMileage;
-            document.getElementById("labelFitnessCert").textContent = t.labelFitnessCert;
-            document.getElementById("labelCleaning").textContent = t.labelCleaning;
-            const fs = document.getElementById("manualFitnessCertificate");
-            fs.options[0].text = t.optionOpen; fs.options[1].text = t.optionClose;
-            const cs = document.getElementById("manualCleaningStatus");
-            cs.options[0].text = t.optionDone; cs.options[1].text = t.optionNotDone;
-            document.getElementById("manualCancel").textContent = t.cancel;
-            document.getElementById("manualSubmit").textContent = t.save;
-        }
-
-        async function fetchAllTrainData() {
-            let { data, error } = await supabase.from("trains").select("*");
-            
-            document.getElementById('eligibleLoading').classList.add('hidden');
-            document.getElementById('ineligibleLoading').classList.add('hidden');
-            document.getElementById('eligibleTrainsTable').classList.remove('hidden');
-            document.getElementById('ineligibleTrainsTable').classList.remove('hidden');
-
-            if (error) { 
-                console.error(error); 
-                data = [
-                    { train_id: "T112", mileage: 2233, fitnessCertificate: true, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [{ id: 1, name: "Brake System Inspection", status: "Open", isCritical: false }, { id: 2, name: "Door Mechanism Check", status: "Open", isCritical: false }, { id: 3, name: "AC Filter Change", status: "Closed", isCritical: false }, { id: 4, name: "Wheel Profile Measurement", status: "Open", isCritical: false }, { id: 5, name: "Interior Cleaning", status: "Closed", isCritical: false }, { id: 6, name: "Headlight Repair", status: "Closed", isCritical: false }, { id: 7, name: "Seat Upholstery", status: "Closed", isCritical: false },] },
-                    { train_id: "T123", mileage: 6922, fitnessCertificate: true, cleaningStatus: "Completed", branding: "Jio", jobCards: [{ id: 1, name: "Pantograph Service", status: "Open", isCritical: false }, { id: 2, name: "Coupler Repair", status: "Closed", isCritical: false }, { id: 3, name: "Brake Pad Replacement", status: "Closed", isCritical: false }, { id: 4, name: "Fire Extinguisher Check", status: "Closed", isCritical: false }, { id: 5, name: "Onboard CCTV Check", status: "Closed", isCritical: false }, { id: 6, name: "Traction Motor Health", status: "Closed", isCritical: false }] },
-                    { train_id: "T124", mileage: 9021, fitnessCertificate: true, cleaningStatus: "Completed", branding: "HDFC Bank", jobCards: [{ id: 1, name: "Annual Fitness Certification", status: "Open", isCritical: true }, { id: 2, name: "Lighting System Repair", status: "Closed", isCritical: false }, { id: 3, name: "Driver Console Calibration", status: "Closed", isCritical: false }, { id: 4, name: "Speed Sensor Check", status: "Closed", isCritical: false }, { id: 5, name: "Brake System Check", status: "Closed", isCritical: false }, { id: 6, name: "Door Mechanism Check", status: "Closed", isCritical: false }, { id: 7, name: "AC System Check", status: "Closed", isCritical: false }, { id: 8, name: "Interior Cleaning", status: "Open", isCritical: false }, { id: 9, name: "Suspension Inspection", status: "Closed", isCritical: false }] },
-                    { train_id: "T101", mileage: 6488, fitnessCertificate: true, cleaningStatus: "Pending", branding: "KMRL Standard", jobCards: [{ id: 1, name: "Interior Deep Cleaning", status: "Open", isCritical: false }, { id: 2, name: "Exterior Wash", status: "Closed", isCritical: false }, { id: 3, name: "Seat Upholstery", status: "Closed", isCritical: false }, { id: 4, name: "Lighting System Repair", status: "Closed", isCritical: false }, { id: 5, name: "Door Mechanism Check", status: "Closed", isCritical: false }, { id: 6, name: "Brake System Check", status: "Closed", isCritical: false }] },
-                    { train_id: "T103", mileage: 5314, fitnessCertificate: true, cleaningStatus: "Pending", branding: "Maruti Suzuki", jobCards: [{ id: 1, name: "Interior Deep Cleaning", status: "Open", isCritical: false }, { id: 2, name: "Exterior Wash", status: "Open", isCritical: false }, { id: 3, name: "Seat Upholstery", status: "Closed", isCritical: false }, { id: 4, name: "Lighting System Repair", status: "Closed", isCritical: false }, { id: 5, name: "Door Mechanism Check", status: "Closed", isCritical: false }, { id: 6, name: "Brake System Check", status: "Closed", isCritical: false }] },
-                    { train_id: "T110", mileage: 25000, fitnessCertificate: false, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [] },
-                    { train_id: "T125", mileage: 12000, fitnessCertificate: true, cleaningStatus: "Completed", branding: "Dabur", jobCards: [{ id: 1, name: "Wheel Profile Measurement", status: "Open", isCritical: false }, { id: 2, name: "Traction Motor Health Check", status: "Open", isCritical: false }, { id: 3, name: "Suspension Inspection", status: "Open", isCritical: false }, { id: 4, name: "Interior Deep Cleaning", status: "Open", isCritical: false }, { id: 5, name: "Exterior Wash", status: "Open", isCritical: false }, { id: 6, name: "Coupler Repair", status: "Open", isCritical: false },] }
-                ];
-            }
-            allTrainData = data;
-            const fixedData = allTrainData.map(train => ({ ...train, jobCards: train.jobCards || [] }));
-            processTrainData(fixedData);
-        }
-
-        function processTrainData(data) {
-            const t = translations[currentLang];
-            const processed = data.map(train => {
-                const reasons = [];
-                if (!train.fitnessCertificate) reasons.push(t.missingCert);
-                if (train.jobCards.some(j => j.isCritical && j.status === 'Open')) reasons.push(t.criticalJob);
-                if (train.jobCards.filter(j => j.status === 'Open').length > 3) reasons.push(t.tooManyJobs);
-                if (train.inService) reasons.push(t.inService);
-                return { ...train, ineligibleReasons: reasons };
-            });
-            renderTables(processed.filter(x => x.ineligibleReasons.length === 0), processed.filter(x => x.ineligibleReasons.length > 0));
-        }
-
-        function renderTables(eligible, ineligible) {
-    const t = translations[currentLang];
-    const eligibleBody = document.querySelector("#eligibleTrainsTable tbody");
-    const ineligibleBody = document.querySelector("#ineligibleTrainsTable tbody");
-    eligibleBody.innerHTML = ""; ineligibleBody.innerHTML = "";
-    document.getElementById("eligibleHeader").textContent = t.eligiblePool;
-    document.getElementById("ineligibleHeader").textContent = t.ineligiblePool;
-    document.getElementById("eligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.eligibility}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
-    document.getElementById("ineligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.reason}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
-    const getTranslatedStatus = (status) => {
-        const statusMap = {
-            'Completed': t.optionCompleted || 'Completed',
-            'Pending': t.optionPending || 'Pending',
-            'Done': t.optionDone || 'Done',
-            'Not Done': t.optionNotDone || 'Not Done'
-        };
-        return statusMap[status] || status;
-    };
-
-    const getTranslatedBrand = (brandName) => {
-        if (currentLang === 'ml' && translations.ml.brands[brandName]) {
-            return translations.ml.brands[brandName];
-        }
-        return brandName || 'N/A';
-    };
-
-    eligible.forEach(train => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td class="text-center">${train.train_id}</td>
-            <td class="text-center"><span class="badge badge-green">✅</span></td>
-            <td class="relative text-center">
-                <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
-                <div class="jobDropdown">
-                    <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
-                </div>
-            </td>
-            <td class="text-center">${train.mileage || 0}</td>
-            <td class="relative cursor-pointer text-center text-blue-600 hover:underline" onclick="toggleJobsDropdown('${train.train_id}-eligible')">
-                <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
-                <div id="${train.train_id}-eligible" class="jobDropdown">
-                    ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
-                </div>
-            </td>
-            <td class="text-center">
-                <button class="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="sendTrain('${train.train_id}')">${t.send}</button>
-            </td>`;
-        eligibleBody.appendChild(tr);
-    });
-
-    ineligible.forEach(train => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-            <td class="text-center">${train.train_id}</td>
-            <td class="text-center">${train.ineligibleReasons.join(", ")}</td>
-            <td class="relative text-center">
-                <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
-                <div class="jobDropdown">
-                    <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
-                </div>
-            </td>
-            <td class="text-center">${train.mileage || 0}</td>
-            <td class="relative cursor-pointer text-center text-blue-600 hover:underline" onclick="toggleJobsDropdown('${train.train_id}-ineligible')">
-                <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
-                <div id="${train.train_id}-ineligible" class="jobDropdown">
-                    ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
-                </div>
-            </td>
-            <td class="text-center">
-                <button class="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="makeReady('${train.train_id}')">${t.makeReady}</button>
-            </td>`;
-        ineligibleBody.appendChild(tr);
-    });
+  const progressList = document.getElementById('progress-list');
+  progressList.innerHTML = '';
+  brands.forEach(brand => {
+    const percentage = (brand.completed / brand.total) * 100;
+    const brandItem = document.createElement('div');
+    brandItem.className = 'brand-item';
+    brandItem.innerHTML = `
+      <div class="brand-info">
+        <span class="brand-name">${brand.name}</span>
+        <span class="brand-hours">${brand.completed} / ${brand.total} hours</span>
+      </div>
+      <div class="progress-container">
+        <div class="progress-bar" style="width:${percentage.toFixed(0)}%">
+          <span class="progress-text">${percentage.toFixed(0)}%</span>
+        </div>
+      </div>
+    `;
+    progressList.appendChild(brandItem);
+  });
 }
 
-        window.toggleJobsDropdown = function(id) {
-            const el = document.getElementById(id);
-            if (el) el.style.display = el.style.display === "block" ? "none" : "block";
-        }
+/* Confirm modal */
+const confirmModal = document.getElementById("confirmModal");
+const confirmMessage = document.getElementById("confirmMessage");
+let confirmAction = null;
+function showConfirm(msg, act) {
+  confirmMessage.textContent = msg;
+  confirmModal.style.display = "flex";
+  confirmAction = act;
+}
 
-        window.sendTrain = function(trainId) {
-            const t = translations[currentLang];
-            showConfirm(t.confirmSend(trainId), () => {
-                supabase.from("trains").update({ inService: true }).eq("train_id", trainId)
-                    .then(() => fetchAllTrainData())
-                    .catch(error => console.error(error));
-            });
-        }
+/* Manual submit logic */
+document.getElementById("manualSubmit").addEventListener("click", async () => {
+  const trainId = document.getElementById("manualTrainId").value.trim().toUpperCase();
+  const jobCardsCount = parseInt(document.getElementById("manualJobCards").value) || 0;
+  const mileage = parseInt(document.getElementById("manualMileage").value) || 0;
+  const fitness = document.getElementById("manualFitnessCertificate").value === "true";
+  const cleaning = document.getElementById("manualCleaningStatus").value;
+  if (!trainId) return alert("Enter Train ID");
 
-        window.makeReady = function(trainId) {
-            const t = translations[currentLang];
-            showConfirm(t.confirmMakeReady(trainId), () => {
-                supabase.from("trains").update({ inService: true }).eq("train_id", trainId)
-                    .then(() => fetchAllTrainData())
-                    .catch(error => console.error(error));
-            });
-        }
-    });
+  const defaultJobNames = [
+    "Brake System Inspection","Door Mechanism Check","Air Conditioning Test","Pantograph Inspection",
+    "Wheel Profile Measurement","Traction System Health Check","Suspension Inspection","Interior Deep Cleaning",
+    "Exterior Wash","Seat & Upholstery Sanitization","Driver Cabin Sanitization","Traction Motor Replacement",
+    "Battery Pack Change","HVAC Filter Replacement","Coupler Repair","Brake Pad Replacement","Lighting System Repair",
+    "Fire Extinguisher Check","Emergency Lighting Test","Annual Fitness Certification","First Aid Kit Replenishment",
+    "Onboard CCTV Firmware Update","Passenger Information System Reset","Driver Console Calibration","Speed Sensor Recalibration"
+  ];
+
+  const jobCards = Array.from({ length: jobCardsCount }, (_, i) => ({
+    id: i + 1,
+    name: defaultJobNames[i % defaultJobNames.length],
+    status: "Open",
+    isCritical: i === 0
+  }));
+
+  // upsert into supabase (train_id is onConflict)
+  try {
+    await supabase.from("trains").upsert({ train_id: trainId, jobCards, mileage, fitnessCertificate: fitness, cleaningStatus: cleaning }, { onConflict: "train_id" });
+  } catch (err) {
+    console.error(err);
+  }
+  document.getElementById("manualModal").style.display = "none";
+  fetchAllTrainData();
+});
+
+/* Manual modal labels translation */
+function updateManualModalLabels() {
+  const t = translations[currentLang];
+  document.getElementById("manualModalTitle").textContent = t.manualTitle || "Manual Data Entry";
+  document.getElementById("labelTrainId").textContent = t.labelTrainId;
+  document.getElementById("labelJobCards").textContent = t.labelJobCards;
+  document.getElementById("labelMileage").textContent = t.labelMileage;
+  document.getElementById("labelFitnessCert").textContent = t.labelFitnessCert;
+  document.getElementById("labelCleaning").textContent = t.labelCleaning;
+  const fs = document.getElementById("manualFitnessCertificate");
+  fs.options[0].text = t.optionOpen; fs.options[1].text = t.optionClose;
+  const cs = document.getElementById("manualCleaningStatus");
+  cs.options[0].text = t.optionDone; cs.options[1].text = t.optionNotDone;
+  document.getElementById("manualCancel").textContent = t.cancel;
+  document.getElementById("manualSubmit").textContent = t.save;
+}
+
+/* Fetching train data from Supabase */
+async function fetchAllTrainData() {
+  try {
+    let { data, error } = await supabase.from("trains").select("*");
+    // hide loaders and show tables
+    document.getElementById('eligibleLoading').classList.add('hidden');
+    document.getElementById('ineligibleLoading').classList.add('hidden');
+    document.getElementById('eligibleTrainsTable').classList.remove('hidden');
+    document.getElementById('ineligibleTrainsTable').classList.remove('hidden');
+
+    if (error) {
+      console.error("Supabase error:", error);
+      data = getFallbackData();
+    }
+    allTrainData = (data || []).map(t => ({ ...t, jobCards: t.jobCards || [] }));
+    processTrainData(allTrainData);
+  } catch (err) {
+    console.error("Fetch error:", err);
+    document.getElementById('eligibleLoading').classList.add('hidden');
+    document.getElementById('ineligibleLoading').classList.add('hidden');
+    // fallback
+    allTrainData = getFallbackData();
+    processTrainData(allTrainData);
+  }
+}
+
+function getFallbackData() {
+  return [
+    { train_id: "T112", mileage: 2233, fitnessCertificate: true, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [{ id:1, name:"Brake System Inspection", status:"Open", isCritical:false },{ id:2, name:"Door Mechanism Check", status:"Open", isCritical:false },{ id:3, name:"AC Filter Change", status:"Closed", isCritical:false }] },
+    { train_id: "T123", mileage: 6922, fitnessCertificate: true, cleaningStatus: "Completed", branding: "Jio", jobCards: [{ id:1, name:"Pantograph Service", status:"Open", isCritical:false }] },
+    { train_id: "T124", mileage: 9021, fitnessCertificate: true, cleaningStatus: "Completed", branding: "HDFC Bank", jobCards: [{ id:1, name:"Annual Fitness Certification", status:"Open", isCritical:true },{ id:8, name:"Interior Cleaning", status:"Open", isCritical:false }] },
+    { train_id: "T101", mileage: 6488, fitnessCertificate: true, cleaningStatus: "Pending", branding: "KMRL Standard", jobCards: [{ id:1, name:"Interior Deep Cleaning", status:"Open", isCritical:false }] },
+    { train_id: "T110", mileage: 25000, fitnessCertificate: false, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [] },
+    { train_id: "T125", mileage: 12000, fitnessCertificate: true, cleaningStatus: "Completed", branding: "Dabur", jobCards: [{ id:1, name:"Wheel Profile Measurement", status:"Open", isCritical:false }] }
+  ];
+}
+
+/* Process & render logic */
+function processTrainData(data) {
+  const t = translations[currentLang];
+  const processed = data.map(train => {
+    const reasons = [];
+    if (!train.fitnessCertificate) reasons.push(t.missingCert);
+    if (train.jobCards.some(j => j.isCritical && j.status === 'Open')) reasons.push(t.criticalJob);
+    if (train.jobCards.filter(j => j.status === 'Open').length > 3) reasons.push(t.tooManyJobs);
+    if (train.inService) reasons.push(t.inService);
+    return { ...train, ineligibleReasons: reasons };
+  });
+  const eligible = processed.filter(x => x.ineligibleReasons.length === 0);
+  const ineligible = processed.filter(x => x.ineligibleReasons.length > 0);
+  renderTables(eligible, ineligible);
+}
+
+function renderTables(eligible, ineligible) {
+  const t = translations[currentLang];
+  const eligibleBody = document.querySelector("#eligibleTrainsTable tbody");
+  const ineligibleBody = document.querySelector("#ineligibleTrainsTable tbody");
+
+  // clear
+  eligibleBody.innerHTML = "";
+  ineligibleBody.innerHTML = "";
+
+  // headers
+  document.getElementById("eligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.eligibility}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
+  document.getElementById("ineligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.reason}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
+
+  const getTranslatedStatus = (status) => {
+    const statusMap = {
+      'Completed': t.optionCompleted || 'Completed',
+      'Pending': t.optionPending || 'Pending',
+      'Done': t.optionDone || 'Done',
+      'Not Done': t.optionNotDone || 'Not Done'
+    };
+    return statusMap[status] || status;
+  };
+
+  const getTranslatedBrand = (brandName) => {
+    if (currentLang === 'ml' && translations.ml.brands && translations.ml.brands[brandName]) {
+      return translations.ml.brands[brandName];
+    }
+    return brandName || 'N/A';
+  };
+
+  eligible.forEach(train => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="text-center" data-label="${t.trainNo}">${train.train_id}</td>
+      <td class="text-center" data-label="${t.eligibility}"><span class="badge badge-green">✅</span></td>
+      <td class="relative text-center" data-label="${t.branding}">
+        <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
+        <div class="jobDropdown">
+          <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
+        </div>
+      </td>
+      <td class="text-center" data-label="${t.mileage}">${train.mileage || 0}</td>
+      <td class="relative cursor-pointer text-center text-blue-600 hover:underline" data-label="${t.jobs}" onclick="toggleJobsDropdown('${train.train_id}-eligible')">
+        <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
+        <div id="${train.train_id}-eligible" class="jobDropdown">
+          ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
+        </div>
+      </td>
+      <td class="text-center" data-label="${t.action}">
+        <button data-action="send" data-train-id="${train.train_id}" class="px-2 py-1 bg-blue-500 text-white rounded-md hover:bg-blue-600" onclick="sendTrain('${train.train_id}')">${t.send}</button>
+      </td>
+    `;
+    eligibleBody.appendChild(tr);
+  });
+
+  ineligible.forEach(train => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="text-center" data-label="${t.trainNo}">${train.train_id}</td>
+      <td class="text-center" data-label="${t.reason}">${train.ineligibleReasons.join(", ")}</td>
+      <td class="relative text-center" data-label="${t.branding}">
+        <span class="font-semibold">${getTranslatedBrand(train.branding)}</span>
+        <div class="jobDropdown">
+          <div class="jobRow"><span>${getTranslatedStatus(train.cleaningStatus || 'N/A')}</span></div>
+        </div>
+      </td>
+      <td class="text-center" data-label="${t.mileage}">${train.mileage || 0}</td>
+      <td class="relative cursor-pointer text-center text-blue-600 hover:underline" data-label="${t.jobs}" onclick="toggleJobsDropdown('${train.train_id}-ineligible')">
+        <span class="font-semibold">${train.jobCards.filter(j => j.status === 'Open').length} / ${train.jobCards.length}</span>
+        <div id="${train.train_id}-ineligible" class="jobDropdown">
+          ${train.jobCards.filter(j => j.status === 'Open').map(j => `<div class="jobRow"><span>${j.name}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('')}
+        </div>
+      </td>
+      <td class="text-center" data-label="${t.action}">
+        <button data-action="makeReady" data-train-id="${train.train_id}" class="px-2 py-1 bg-green-500 text-white rounded-md hover:bg-green-600" onclick="makeReady('${train.train_id}')">${t.makeReady}</button>
+      </td>
+    `;
+    ineligibleBody.appendChild(tr);
+  });
+}
+
+// global helpers used by inline onclick
+window.toggleJobsDropdown = function(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+window.sendTrain = function(trainId) {
+  const t = translations[currentLang];
+  showConfirm(t.confirmSend(trainId), () => {
+    supabase.from("trains").update({ inService: true }).eq("train_id", trainId)
+      .then(() => fetchAllTrainData())
+      .catch(error => console.error(error));
+  });
+}
+
+window.makeReady = function(trainId) {
+  const t = translations[currentLang];
+  showConfirm(t.confirmMakeReady(trainId), () => {
+    supabase.from("trains").update({ inService: true }).eq("train_id", trainId)
+      .then(() => fetchAllTrainData())
+      .catch(error => console.error(error));
+  });
+}
+
+/* Update dashboard text/headers (translation aware) */
+function updateDashboardText() {
+  const t = translations[currentLang];
+  document.getElementById("eligibleHeader").textContent = t.eligiblePool;
+  document.getElementById("ineligibleHeader").textContent = t.ineligiblePool;
+  document.getElementById("eligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.eligibility}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
+  document.getElementById("ineligibleHeadRow").innerHTML = `<th class="text-center">${t.trainNo}</th><th class="text-center">${t.reason}</th><th class="text-center">${t.branding}</th><th class="text-center">${t.mileage}</th><th class="text-center">${t.jobs}</th><th class="text-center">${t.action}</th>`;
+  updateManualModalLabels();
+  if (allTrainData && allTrainData.length) processTrainData(allTrainData);
+}
 </script>
+
 </body>
-
 </html>
-
-
-
