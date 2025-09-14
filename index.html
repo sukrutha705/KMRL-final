@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Manifest + icons -->
+  <!-- Manifest + icons (ensure files exist in your project root) -->
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/icons/icon-192.png" type="image/png" />
   <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -31,7 +31,7 @@
   </script>
 
   <style>
-    :root { --shadow: 0 6px 18px rgba(15, 23, 42, 0.06); }
+    :root { --shadow: 0 6px 18px rgba(15, 23, 42, 0.06); --accent: #4f46e5; }
     body { font-family: 'Inter', sans-serif; background:#f3f4f6; color:#111827; margin:0; -webkit-font-smoothing:antialiased; }
     .container { max-width:1200px; margin:0 auto; padding:1.5rem; }
     .card { background:white; border-radius:12px; box-shadow:var(--shadow); padding:1.25rem; }
@@ -45,7 +45,7 @@
     .badge-red { background:#fee2e2; color:#991b1b; }
     .light { width:12px; height:12px; border-radius:9999px; display:inline-block; margin-right:0.5rem; }
     .light-green { background:#10b981; } .light-red { background:#ef4444; }
-    .spinner { border:4px solid rgba(0,0,0,0.06); width:36px; height:36px; border-radius:9999px; border-left-color:#4f46e5; animation:spin 1s linear infinite; }
+    .spinner { border:4px solid rgba(0,0,0,0.06); width:36px; height:36px; border-radius:9999px; border-left-color:var(--accent); animation:spin 1s linear infinite; }
     @keyframes spin { from { transform:rotate(0) } to { transform:rotate(360deg) } }
 
     .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); align-items:center; justify-content:center; z-index:60; }
@@ -58,16 +58,14 @@
     .text-blue-600 { color:#2563eb; }
     .text-red-600 { color:#dc2626; font-weight:700; }
 
-    /* advertisement styles */
     .brand-item { background:#f8fafc; border:1px solid #e9eef6; border-radius:10px; padding:0.9rem; margin-bottom:0.9rem; transition:transform .15s ease, box-shadow .15s ease; }
     .brand-item:hover { transform:translateY(-4px); box-shadow:0 8px 20px rgba(2,6,23,0.06); }
 
-    /* responsive table for small screens */
     @media (max-width:768px) {
       .container { padding:1rem; }
       table, thead, tbody, th, td, tr { display:block; }
       thead tr { position:absolute; left:-9999px; top:-9999px; }
-      tr { border:1px solid #e6e7eb; margin-bottom:0.8rem; border-radius:8px; overflow:hidden; }
+      tr { border:1px solid #e6e7eb; margin-bottom:0.8rem; border-radius:8px; overflow:hidden; background:white; }
       td { border:none; border-bottom:1px solid #e6e7eb; position:relative; padding-left:50%; text-align:right; }
       td::before { position:absolute; left:12px; width:45%; padding-right:10px; white-space:nowrap; text-align:left; font-weight:600; color:#475569; content:attr(data-label); }
       .jobDropdown { position:static; width:100%; box-shadow:none; border-radius:6px; margin-top:0.5rem; }
@@ -91,7 +89,7 @@
     </div>
   </div>
 
-  <!-- dashboard -->
+  <!-- main dashboard -->
   <main id="dashboard" class="container mt-6">
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <section class="card">
@@ -187,7 +185,7 @@
   <script type="module">
     import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
 
-    // Supabase credentials (use your own if needed)
+    // Supabase credentials (from your earlier file)
     const SUPABASE_URL = "https://nquzhbqkdwwxqmkdwjuz.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5xdXpoYnFrZHd3eHFta2R3anV6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc0MzAxOTcsImV4cCI6MjA3MzAwNjE5N30.zCys6_cd9vvsK2Sr-xBsT_ZXYRRIm9iH1opekRvSATA";
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -303,21 +301,21 @@
     // Branding list for ads demo
     const BRANDING_TYPES = ["KMRL Standard","Jio","HDFC Bank","Maruti Suzuki","Dabur","Samsung","Myntra","Amazon"];
 
-    // Helper: batch render (uses document fragment)
+    // Document-fragment batch render helper
     function batchRender(nodes, container) {
       const frag = document.createDocumentFragment();
       nodes.forEach(n => frag.appendChild(n));
       container.appendChild(frag);
     }
 
-    // Toggle job dropdown (global, used from inline onclick)
+    // Toggle job dropdown (global)
     window.toggleJobsDropdown = function(id) {
       const el = document.getElementById(id);
       if (!el) return;
       el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     };
 
-    // Show confirm modal for an action
+    // show confirm modal
     function showConfirm(msg, trainId, action) {
       confirmMessage.textContent = msg;
       confirmModal.style.display = 'flex';
@@ -327,37 +325,28 @@
 
     confirmNo.addEventListener('click', () => {
       confirmModal.style.display = 'none';
-      pendingAction = null;
-      pendingTrainId = null;
+      pendingAction = null; pendingTrainId = null;
     });
 
     confirmYes.addEventListener('click', async () => {
       if (!pendingTrainId || !pendingAction) { confirmModal.style.display = 'none'; return; }
-
       try {
         if (pendingAction === 'send') {
-          // mark inService true
           await supabase.from('trains').update({ inService: true }).eq('train_id', pendingTrainId);
         } else if (pendingAction === 'makeReady') {
-          // clear inService and ensure fitnessCertificate true (example)
+          // Example: mark not inService; real logic can vary
           await supabase.from('trains').update({ inService: false }).eq('train_id', pendingTrainId);
         }
       } catch (err) {
         console.error('Supabase update error', err);
       }
-
-      // reload local data
       await fetchAllTrainData();
       confirmModal.style.display = 'none';
       pendingTrainId = null; pendingAction = null;
     });
 
-    // Add action buttons to a row node
-    function attachActionButtonsToRow(rowNode, trainId) {
-      const td = document.createElement('td');
-      td.setAttribute('data-label', translations[currentLang].action);
-      td.className = 'flex gap-2 justify-end items-center';
-
+    // Attach action buttons to a row: NOTE: we'll use this selectively so eligible only gets "Send"
+    function makeSendButton(trainId) {
       const sendBtn = document.createElement('button');
       sendBtn.className = 'px-2 py-1 bg-blue-600 text-white rounded-md text-sm hover:bg-blue-700';
       sendBtn.textContent = translations[currentLang].send;
@@ -365,7 +354,10 @@
         e.stopPropagation();
         showConfirm(translations[currentLang].confirmSend(trainId), trainId, 'send');
       });
+      return sendBtn;
+    }
 
+    function makeMakeReadyButton(trainId) {
       const readyBtn = document.createElement('button');
       readyBtn.className = 'px-2 py-1 bg-green-600 text-white rounded-md text-sm hover:bg-green-700';
       readyBtn.textContent = translations[currentLang].makeReady;
@@ -373,13 +365,10 @@
         e.stopPropagation();
         showConfirm(translations[currentLang].confirmMakeReady(trainId), trainId, 'makeReady');
       });
-
-      td.appendChild(sendBtn);
-      td.appendChild(readyBtn);
-      rowNode.appendChild(td);
+      return readyBtn;
     }
 
-    // Render tables from processed lists
+    // Render tables (eligible only Send; ineligible only Make Ready)
     function renderTables(eligible, ineligible) {
       const eligibleBody = document.querySelector('#eligibleTrainsTable tbody');
       const ineligibleBody = document.querySelector('#ineligibleTrainsTable tbody');
@@ -387,7 +376,7 @@
       eligibleBody.innerHTML = '';
       ineligibleBody.innerHTML = '';
 
-      // Headers (translation-aware)
+      // headers
       document.getElementById('eligibleHeadRow').innerHTML =
         `<th class="text-center">${translations[currentLang].trainNo}</th>
          <th class="text-center">${translations[currentLang].eligibility}</th>
@@ -404,13 +393,13 @@
          <th class="text-center">${translations[currentLang].jobs}</th>
          <th class="text-center">${translations[currentLang].action}</th>`;
 
-      // create nodes
+      // create eligible nodes (only Send button)
       const eligibleNodes = eligible.map(train => {
         const tr = document.createElement('tr');
         tr.className = 'relative';
 
-        const openCount = train.jobCards.filter(j => j.status === 'Open' || j.status === 'open').length;
-        const jobListHtml = train.jobCards.map(j => `<div class="jobRow"><span>${j.name || j.title || 'Job'}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('');
+        const openCount = (train.jobCards || []).filter(j => j.status === 'Open' || j.status === 'open').length;
+        const jobListHtml = (train.jobCards || []).map(j => `<div class="jobRow"><span>${j.name || j.title || 'Job'}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('');
 
         tr.innerHTML = `
           <td data-label="${translations[currentLang].trainNo}">${train.train_id}</td>
@@ -421,19 +410,26 @@
           </td>
           <td data-label="${translations[currentLang].mileage}">${train.mileage || 0}</td>
           <td data-label="${translations[currentLang].jobs}" class="relative cursor-pointer text-blue-600 hover:underline" onclick="toggleJobsDropdown('${train.train_id}-eligible')">
-            <span class="font-semibold">${openCount} / ${train.jobCards.length}</span>
+            <span class="font-semibold">${openCount} / ${ (train.jobCards||[]).length }</span>
             <div id="${train.train_id}-eligible" class="jobDropdown">${jobListHtml || '<div class="jobRow"><span>No jobs</span></div>'}</div>
           </td>`;
 
-        attachActionButtonsToRow(tr, train.train_id);
+        // action td (only Send)
+        const tdAction = document.createElement('td');
+        tdAction.setAttribute('data-label', translations[currentLang].action);
+        tdAction.className = 'text-right';
+        tdAction.appendChild(makeSendButton(train.train_id));
+        tr.appendChild(tdAction);
+
         return tr;
       });
 
+      // create ineligible nodes (only Make Ready button)
       const ineligibleNodes = ineligible.map(train => {
         const tr = document.createElement('tr');
         tr.className = 'relative';
-        const openCount = train.jobCards.filter(j => j.status === 'Open' || j.status === 'open').length;
-        const jobListHtml = train.jobCards.map(j => `<div class="jobRow"><span>${j.name || j.title || 'Job'}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('');
+        const openCount = (train.jobCards || []).filter(j => j.status === 'Open' || j.status === 'open').length;
+        const jobListHtml = (train.jobCards || []).map(j => `<div class="jobRow"><span>${j.name || j.title || 'Job'}</span><span class="${j.isCritical ? 'text-red-600' : ''}">${j.isCritical ? '⚠' : ''}</span></div>`).join('');
 
         tr.innerHTML = `
           <td data-label="${translations[currentLang].trainNo}">${train.train_id}</td>
@@ -444,41 +440,47 @@
           </td>
           <td data-label="${translations[currentLang].mileage}">${train.mileage || 0}</td>
           <td data-label="${translations[currentLang].jobs}" class="relative cursor-pointer text-blue-600 hover:underline" onclick="toggleJobsDropdown('${train.train_id}-ineligible')">
-            <span class="font-semibold">${openCount} / ${train.jobCards.length}</span>
+            <span class="font-semibold">${openCount} / ${ (train.jobCards||[]).length }</span>
             <div id="${train.train_id}-ineligible" class="jobDropdown">${jobListHtml || '<div class="jobRow"><span>No jobs</span></div>'}</div>
           </td>`;
 
-        attachActionButtonsToRow(tr, train.train_id);
+        const tdAction = document.createElement('td');
+        tdAction.setAttribute('data-label', translations[currentLang].action);
+        tdAction.className = 'text-right';
+        tdAction.appendChild(makeMakeReadyButton(train.train_id));
+        tr.appendChild(tdAction);
+
         return tr;
       });
 
       batchRender(eligibleNodes, eligibleBody);
       batchRender(ineligibleNodes, ineligibleBody);
 
-      // hide loaders & show tables
+      // hide loaders and reveal tables
       eligibleLoading.classList.add('hidden');
       ineligibleLoading.classList.add('hidden');
       document.getElementById('eligibleTrainsTable').classList.remove('hidden');
       document.getElementById('ineligibleTrainsTable').classList.remove('hidden');
     }
 
-    // Process data -> split eligible / ineligible
+    // Process data -> determine eligible / ineligible
     function processTrainData(data) {
       const t = translations[currentLang];
-      const processed = data.map(train => {
+      const processed = (data || []).map(train => {
         const reasons = [];
         if (!train.fitnessCertificate) reasons.push(t.missingCert);
-        if (train.jobCards.some(j => j.isCritical && (j.status === 'Open' || j.status === 'open'))) reasons.push(t.criticalJob);
-        if (train.jobCards.filter(j => (j.status === 'Open' || j.status === 'open')).length > 3) reasons.push(t.tooManyJobs);
+        if ((train.jobCards || []).some(j => j.isCritical && (j.status === 'Open' || j.status === 'open'))) reasons.push(t.criticalJob);
+        if ((train.jobCards || []).filter(j => (j.status === 'Open' || j.status === 'open')).length > 3) reasons.push(t.tooManyJobs);
         if (train.inService) reasons.push(t.inService);
         return { ...train, ineligibleReasons: reasons };
       });
+
       const eligible = processed.filter(x => x.ineligibleReasons.length === 0);
       const ineligible = processed.filter(x => x.ineligibleReasons.length > 0);
       renderTables(eligible, ineligible);
     }
 
-    // fallback sample data
+    // fallback sample data (used when Supabase unavailable)
     function getFallbackData() {
       return [
         { train_id: "T112", mileage: 2233, fitnessCertificate: true, cleaningStatus: "Completed", branding: "KMRL Standard", jobCards: [{ id:1, name:"Brake System Inspection", status:"Open", isCritical:false },{ id:2, name:"Door Mechanism Check", status:"Open", isCritical:false },{ id:3, name:"AC Filter Change", status:"Closed", isCritical:false }] },
@@ -508,7 +510,7 @@
       processTrainData(allTrainData);
     }
 
-    // Update manual modal labels translation-aware
+    // Update manual modal labels (translation-aware)
     function updateManualModalLabels() {
       const t = translations[currentLang];
       document.getElementById('manualModalTitle').textContent = t.manualTitle;
@@ -525,7 +527,7 @@
       document.getElementById('manualSubmit').textContent = t.save;
     }
 
-    // Apply translations for headers & buttons
+    // Update dashboard text & headers
     function updateDashboardText() {
       const t = translations[currentLang];
       document.getElementById('eligibleHeader').textContent = t.eligiblePool;
@@ -535,7 +537,7 @@
       if (allTrainData && allTrainData.length) processTrainData(allTrainData);
     }
 
-    // Render advertisement progress bars
+    // Render advertisement bars
     function renderProgressBars() {
       const list = document.getElementById('progress-list');
       list.innerHTML = '';
@@ -552,7 +554,7 @@
             <div class="brand-hours text-sm text-slate-500">${completed} / ${total} hours</div>
           </div>
           <div class="progress-container w-full bg-slate-100 rounded-full h-4 overflow-hidden">
-            <div class="progress-bar h-4 rounded-full" style="width:${percent}%; background:#4f46e5;"></div>
+            <div class="progress-bar h-4 rounded-full" style="width:${percent}%; background:var(--accent);"></div>
           </div>
         `;
         list.appendChild(div);
@@ -589,18 +591,15 @@
     manualCancel.addEventListener('click', () => manualModal.style.display = 'none');
     window.addEventListener('click', (e) => { if (e.target === manualModal) manualModal.style.display = 'none'; });
 
-    // Manual submit handler
-    manualSubmit.addEventListener('click', async () => {
+    // Manual submit handler (inserts/updates supabase)
+    document.getElementById('manualSubmit').addEventListener('click', async () => {
       const trainId = document.getElementById('manualTrainId').value.trim().toUpperCase();
       const jobCardsCount = parseInt(document.getElementById('manualJobCards').value || '0', 10);
       const mileage = parseInt(document.getElementById('manualMileage').value || '0', 10);
       const fitness = (document.getElementById('manualFitnessCertificate').value === 'true');
       const cleaning = document.getElementById('manualCleaningStatus').value;
 
-      if (!trainId) {
-        alert('Please enter Train ID');
-        return;
-      }
+      if (!trainId) { alert('Please enter Train ID'); return; }
 
       const defaultJobNames = [
         "Brake System Inspection","Door Mechanism Check","Air Conditioning Test","Pantograph Inspection",
@@ -631,15 +630,13 @@
       }
 
       manualModal.style.display = 'none';
-      fetchAllTrainData();
+      await fetchAllTrainData();
     });
 
     // initial load
     (async function init() {
-      // show loaders
       eligibleLoading.classList.remove('hidden');
       ineligibleLoading.classList.remove('hidden');
-
       await fetchAllTrainData();
       updateDashboardText();
     })();
