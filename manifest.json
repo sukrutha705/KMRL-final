@@ -1,18 +1,20 @@
 {
-  "name": "KMRL Dashboard",
-  "short_name": "KMRL",
-  "start_url": "/",
+  "name": "AI-Driven Train Induction Planning",
+  "short_name": "Train Planner",
+  "description": "A PWA dashboard for AI-driven train induction planning and monitoring.",
+  "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#1f2937",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
   "icons": [
     {
-      "src": "/path/to/your/icon-192x192.png",
+      "src": "/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/path/to/your/icon-512x512.png",
+      "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     }
